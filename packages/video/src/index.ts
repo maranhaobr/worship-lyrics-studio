@@ -1,0 +1,1 @@
+export { LyricComposition } from './LyricComposition';

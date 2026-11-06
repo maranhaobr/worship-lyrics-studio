@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 datasource db {
   provider = "postgresql"
@@ -23,6 +24,7 @@ model Song {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   sections  SongSection[]
+  visualProjects VisualProject[]
   @@index([title])
 }
 model SongSection {
@@ -44,4 +46,35 @@ model LyricLine {
   startMs   Int?
   endMs     Int?
   @@unique([sectionId, order])
+}
+
+model VisualProject {
+  id        String   @id @default(cuid())
+  songId    String?
+  song      Song?    @relation(fields: [songId], references: [id], onDelete: SetNull)
+  name      String
+  revision  Int      @default(1)
+  document  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([songId, updatedAt])
+}
+
+model VisualTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  style     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MediaAsset {
+  id         String   @id @default(cuid())
+  name       String
+  kind       String
+  mimeType   String
+  storageKey String   @unique
+  size       Int
+  durationMs Int?
+  createdAt  DateTime @default(now())
 }
