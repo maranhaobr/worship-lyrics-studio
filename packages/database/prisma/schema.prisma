@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum SectionType {
+  INTRO
+  VERSE
+  PRE_CHORUS
+  CHORUS
+  BRIDGE
+  OUTRO
+  CUSTOM
+}
+model Song {
+  id        String        @id @default(cuid())
+  title     String
+  artist    String?
+  key       String?
+  bpm       Int?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  sections  SongSection[]
+  @@index([title])
+}
+model SongSection {
+  id        String      @id @default(cuid())
+  songId    String
+  song      Song        @relation(fields: [songId], references: [id], onDelete: Cascade)
+  type      SectionType
+  label     String
+  order     Int
+  lines     LyricLine[]
+  @@unique([songId, order])
+}
+model LyricLine {
+  id        String      @id @default(cuid())
+  sectionId String
+  section   SongSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  text      String
+  order     Int
+  startMs   Int?
+  endMs     Int?
+  @@unique([sectionId, order])
+}

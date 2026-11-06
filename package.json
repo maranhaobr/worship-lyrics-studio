@@ -1,0 +1,1 @@
+{"name":"worship-lyrics-studio","private":true,"workspaces":["apps/*","packages/*"],"scripts":{"dev":"npm run dev -w @wls/web","build":"npm run build -w @wls/web","db:generate":"npm run generate -w @wls/database","db:migrate":"npm run migrate -w @wls/database","db:studio":"npm run studio -w @wls/database"},"engines":{"node":">=20.9.0"}}

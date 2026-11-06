@@ -1,0 +1,5 @@
+import './globals.css';
+import Link from 'next/link';
+import { Music2, LayoutDashboard, Library } from 'lucide-react';
+export const metadata = { title: 'Worship Lyrics Studio', description: 'Gerencie letras e apresentações de louvor' };
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body><div className="min-h-screen md:flex"><aside className="md:w-64 border-r border-slate-800 p-6 bg-[#0d1422]"><Link href="/" className="flex items-center gap-3 font-bold text-xl mb-10"><Music2 className="text-accent"/> Worship Lyrics</Link><nav className="space-y-2"><Link href="/" className="flex items-center gap-3 p-3 hover:bg-panel rounded-xl"><LayoutDashboard size={18}/> Dashboard</Link><Link href="/songs" className="flex items-center gap-3 p-3 hover:bg-panel rounded-xl"><Library size={18}/> Biblioteca</Link></nav><p className="text-slate-500 text-xs mt-12">Studio • MVP Fase 1</p></aside><main className="flex-1 p-5 md:p-10 max-w-[1500px]">{children}</main></div></body></html>}
