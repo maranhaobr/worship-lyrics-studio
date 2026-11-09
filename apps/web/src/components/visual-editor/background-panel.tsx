@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import type { MediaView, VisualStyle } from '@wls/shared';
 import { readResponse } from '@/hooks/use-visual-editor';
+import { useToast } from '@/components/toast-provider';
 
 async function videoDuration(file: File): Promise<number> {
   const url = URL.createObjectURL(file);
@@ -18,6 +19,7 @@ async function videoDuration(file: File): Promise<number> {
 }
 export function BackgroundPanel({ style, assets, onChange, onUploaded, onError }: { style: VisualStyle; assets: MediaView[]; onChange: (style: VisualStyle) => void; onUploaded: (asset: MediaView) => void; onError: (message: string) => void }) {
   const [uploading, setUploading] = useState(false);
+  const notify = useToast();
   const input = useRef<HTMLInputElement>(null);
   const background = style.background;
   async function upload(file: File) {
@@ -28,6 +30,7 @@ export function BackgroundPanel({ style, assets, onChange, onUploaded, onError }
       if (file.type.startsWith('video/')) form.append('durationMs', String(await videoDuration(file)));
       const asset = await readResponse<MediaView>(await fetch('/api/media', { method: 'POST', body: form }));
       onUploaded(asset);
+      notify('Fundo enviado', 'success');
     } catch (error) { onError(error instanceof Error ? error.message : 'Erro no upload'); }
     finally { setUploading(false); if (input.current) input.current.value = ''; }
   }
