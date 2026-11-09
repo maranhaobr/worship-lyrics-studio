@@ -9,5 +9,6 @@ config({ path: resolve(__dirname, '../../.env') });
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   transpilePackages: ['@wls/database','@wls/shared','@wls/video'],
+  serverExternalPackages: ['@remotion/bundler', '@remotion/renderer'],
 };
 export default nextConfig;

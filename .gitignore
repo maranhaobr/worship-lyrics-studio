@@ -8,3 +8,5 @@ dist
 out/
 .next-build/
 packages/database/generated/
+__pycache__/
+*.pyc

@@ -2,7 +2,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Player, type PlayerRef } from '@remotion/player';
 import { LyricComposition } from '@wls/video';
-import { durationInFrames, type MediaView, type VisualProjectDocument } from '@wls/shared';
+import { Html5Audio } from 'remotion';
+import { durationInFrames, type CompositionProps, type MediaView, type VisualProjectDocument } from '@wls/shared';
+
+// Reference audio exists only in the interactive preview, never in the exported composition.
+function PreviewComposition(props: CompositionProps) {
+  const audio = props.document.referenceAudio ? props.media[props.document.referenceAudio.assetId] : undefined;
+  return <><LyricComposition {...props} />{audio && <Html5Audio src={audio.src} />}</>;
+}
 
 export function PreviewPlayer({ document, assets, onFrame, playerRef }: {
   document: VisualProjectDocument; assets: MediaView[]; onFrame: (frame: number) => void; playerRef: React.RefObject<PlayerRef | null>;
@@ -19,8 +26,8 @@ export function PreviewPlayer({ document, assets, onFrame, playerRef }: {
     return () => { player.removeEventListener('frameupdate', listener); player.removeEventListener('seeked', listener); };
   }, [playerRef]);
   return <div className="overflow-hidden rounded-xl border border-slate-700 bg-black">
-    <Player ref={playerRef} component={LyricComposition} inputProps={props} durationInFrames={durationInFrames(document)}
-      fps={document.fps} compositionWidth={document.width} compositionHeight={document.height} controls showVolumeControls={false} style={{ width: '100%', aspectRatio: '16 / 9' }}
+    <Player ref={playerRef} component={PreviewComposition} inputProps={props} durationInFrames={durationInFrames(document)}
+      fps={document.fps} compositionWidth={document.width} compositionHeight={document.height} controls showVolumeControls={Boolean(document.referenceAudio)} style={{ width: '100%', aspectRatio: '16 / 9' }}
       errorFallback={({ error }) => <div role="alert" className="p-6 text-red-200">Não foi possível carregar o preview: {error.message}</div>} />
   </div>;
 }

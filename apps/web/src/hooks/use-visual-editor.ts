@@ -47,6 +47,13 @@ export function useVisualEditor(project: ProjectView) {
     } catch (error) { setError(error instanceof Error ? error.message : 'Erro ao salvar'); }
     finally { savingRef.current = false; setSaving(false); }
   }
-  return { document: history.present, name, setName, revision, dirty, saving, save, error, setError, message, setMessage, change,
+  function acceptSaved(project: ProjectView) {
+    const document = visualProjectSchema.parse(project.document);
+    presentRef.current = document;
+    dispatch({ type: 'change', document });
+    setName(project.name); setRevision(project.revision); setSaved({ name: project.name, document });
+    setError(''); setMessage('Alinhamento aplicado. Confira a sincronização no preview.');
+  }
+  return { document: history.present, name, setName, revision, dirty, saving, save, error, setError, message, setMessage, change, acceptSaved,
     undo: () => dispatch({ type: 'undo' }), redo: () => dispatch({ type: 'redo' }), canUndo: history.past.length > 0, canRedo: history.future.length > 0 };
 }

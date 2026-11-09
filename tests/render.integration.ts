@@ -5,12 +5,13 @@ import { resolve } from 'node:path';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, RenderInternals, selectComposition } from '@remotion/renderer';
 import { prisma } from '@wls/database';
-import { projectFromSong, type CompositionProps, type MediaView } from '@wls/shared';
+import { distributeWords, projectFromSong, type CompositionProps, type MediaView } from '@wls/shared';
 
 const base = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 const ff = (bin: 'ffmpeg' | 'ffprobe', args: string[]) => RenderInternals.callFf({ bin, args, indent: false, logLevel: 'error', binariesDirectory: null, cancelSignal: undefined });
 test('renders gradient, image and looping video backgrounds without an audio track', { timeout: 180000 }, async () => {
   const ids: string[] = [];
+  let projectId: string | undefined;
   const prefix = resolve('out', `render-test-${Date.now()}`);
   try {
     await mkdir('out', { recursive: true });
@@ -20,8 +21,9 @@ test('renders gradient, image and looping video backgrounds without an audio tra
     document.style.animation = { type: 'words', durationMs: 100 };
     const serveUrl = await bundle({ entryPoint: resolve('packages/video/src/remotion/index.ts') });
     async function render(inputProps: CompositionProps, outputLocation: string) {
-      const composition = await selectComposition({ serveUrl, id: 'WorshipLyrics', inputProps });
-      await renderMedia({ serveUrl, composition, inputProps, outputLocation, codec: 'h264', pixelFormat: 'yuv420p', muted: true, concurrency: 2 });
+      const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE;
+      const composition = await selectComposition({ serveUrl, id: 'WorshipLyrics', inputProps, browserExecutable });
+      await renderMedia({ serveUrl, composition, inputProps, outputLocation, codec: 'h264', pixelFormat: 'yuv420p', muted: true, concurrency: 2, browserExecutable });
       const probe = await ff('ffprobe', ['-v', 'error', '-show_streams', '-of', 'json', outputLocation]);
       const streams = (JSON.parse(probe.stdout) as { streams: { codec_type: string; width?: number; height?: number }[] }).streams;
       assert.equal(streams.length, 1); assert.equal(streams[0].codec_type, 'video'); assert.equal(streams[0].width, 1920); assert.equal(streams[0].height, 1080);
@@ -48,7 +50,26 @@ test('renders gradient, image and looping video backgrounds without an audio tra
     const image = await upload(png, 'render-test.png', 'image/png');
     document.style.background = { type: 'image', assetId: image.id }; document.style.animation.type = 'zoom';
     await render({ document, media: { [image.id]: { src: `${base}/api/media/${image.id}/content`, durationMs: null } } }, `${prefix}-image.mp4`);
+    const created = await fetch(`${base}/api/visual-projects/from-lyrics`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Export test', lyrics: 'Santo para sempre\nGlória a Ti' }) });
+    assert.equal(created.status, 201); projectId = (await created.json() as { id: string }).id;
+    document.style.background = { type: 'gradient', from: '#000000', to: '#000000', angle: 0 };
+    const reference = await upload(await readFile(`${prefix}.wav`), 'reference.wav', 'audio/wav');
+    document.referenceAudio = { assetId: reference.id };
+    document.clips = [
+      { ...document.clips[0], id: 'first', startMs: 0, endMs: 500, words: distributeWords(document.clips[0].text, 500), style: { background: { type: 'video', assetId: video.id }, animation: { type: 'slide', durationMs: 100 } } },
+      { ...document.clips[0], id: 'second', startMs: 500, endMs: 1000, words: distributeWords(document.clips[0].text, 500), style: { background: { type: 'image', assetId: image.id }, animation: { type: 'zoom', durationMs: 100 } } },
+    ];
+    const exported = await fetch(`${base}/api/visual-projects/${projectId}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(document) });
+    assert.equal(exported.status, 200, await exported.clone().text().then(text => text.slice(0, 200)));
+    assert.equal(exported.headers.get('content-type'), 'video/mp4');
+    const exportPath = `${prefix}-slides.mp4`; await writeFile(exportPath, Buffer.from(await exported.arrayBuffer()));
+    const probe = await ff('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,width,height', '-of', 'json', exportPath]);
+    const streams = (JSON.parse(probe.stdout) as { streams: { codec_type: string; width: number; height: number }[] }).streams;
+    assert.equal(streams.length, 1); assert.equal(streams[0].codec_type, 'video'); assert.equal(streams[0].width, 1920);
+    await ff('ffmpeg', ['-ss', '0.25', '-i', exportPath, '-frames:v', '1', `${prefix}-first.png`]);
+    await ff('ffmpeg', ['-ss', '0.75', '-i', exportPath, '-frames:v', '1', `${prefix}-second.png`]);
   } finally {
+    if (projectId) await prisma.visualProject.deleteMany({ where: { id: projectId } });
     for (const id of ids) {
       const asset = await prisma.mediaAsset.findUniqueOrThrow({ where: { id } });
       await unlink(resolve(process.env.MEDIA_STORAGE_DIR ?? '.data/media', asset.storageKey));

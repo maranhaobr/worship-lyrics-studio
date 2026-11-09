@@ -84,3 +84,25 @@ test('song CRUD, independent visual projects, revisions, templates and persisten
     await prisma.$disconnect();
   }
 });
+
+test('whole lyrics import creates an editable independent video and persists per-slide overrides', async () => {
+  let projectId: string | undefined;
+  try {
+    const response = await request('/api/visual-projects/from-lyrics', 'POST', { title: 'Letra inteira (teste)', lyrics: '[Verso]\nSanto para sempre\n\n[Refrão]\nGlória a Ti\nGlória a Ti' });
+    assert.equal(response.status, 201);
+    projectId = (await response.json() as { id: string }).id;
+    const project = await (await request(`/api/visual-projects/${projectId}`)).json() as ProjectView;
+    assert.equal(project.songId, null); assert.equal(project.document.clips.length, 3);
+    project.document.clips[0].style = { background: { type: 'gradient', from: '#000000', to: '#ffffff', angle: 90 }, animation: { type: 'zoom', durationMs: 800 } };
+    const update = await request(`/api/visual-projects/${projectId}`, 'PUT', { name: project.name, revision: project.revision, document: project.document }); assert.equal(update.status, 200);
+    const saved = await (await request(`/api/visual-projects/${projectId}`)).json() as ProjectView;
+    assert.equal(saved.document.clips[0].style?.animation?.type, 'zoom');
+    assert.equal(saved.document.clips[1].style?.animation?.type, 'slide');
+    saved.document.clips[1].style = { background: { type: 'image', assetId: 'missing' } };
+    assert.equal((await request(`/api/visual-projects/${projectId}`, 'PUT', { name: saved.name, revision: saved.revision, document: saved.document })).status, 422);
+    assert.equal((await request('/api/visual-projects/from-lyrics', 'POST', { title: 'Vazia', lyrics: '[Refrão]' })).status, 422);
+  } finally {
+    if (projectId) await prisma.visualProject.deleteMany({ where: { id: projectId } });
+    await prisma.$disconnect();
+  }
+});

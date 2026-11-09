@@ -34,7 +34,7 @@ export function BackgroundPanel({ style, assets, onChange, onUploaded, onError }
   return <section className="card space-y-3"><h2 className="font-bold">Fundo</h2>
     <label><span className="label">Tipo</span><select value={background.type} onChange={event => {
       if (event.target.value === 'gradient') onChange({ ...style, background: { type: 'gradient', from: '#0c1a35', to: '#183e62', angle: 135 } });
-      else { const asset = assets.find(item => item.kind === event.target.value); if (asset) onChange({ ...style, background: { type: asset.kind, assetId: asset.id } }); else onError('Envie um arquivo desse tipo para usá-lo como fundo.'); }
+      else { const asset = assets.find(item => item.kind === event.target.value); if (asset && asset.kind !== 'audio') onChange({ ...style, background: { type: asset.kind, assetId: asset.id } }); else onError('Envie um arquivo desse tipo para usá-lo como fundo.'); }
     }}><option value="gradient">Gradiente</option><option value="image">Imagem</option><option value="video">Vídeo sem áudio</option></select></label>
     {background.type === 'gradient' ? <div className="grid grid-cols-2 gap-3">
       <label><span className="label">Cor inicial</span><input className="h-11 !p-1" type="color" value={background.from} onChange={event => onChange({ ...style, background: { ...background, from: event.target.value } })} /></label>

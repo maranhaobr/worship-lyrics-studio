@@ -14,5 +14,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  alignment-worker:
+    build: ./services/alignment
+    profiles: [alignment]
+    environment:
+      DATABASE_URL: postgresql://wls:wls@postgres:5432/wls
+      MEDIA_STORAGE_DIR: /media
+      MODEL_CACHE_DIR: /models
+      WHISPER_MODEL: small
+      ALIGNMENT_DEVICE: cpu
+      CPU_THREADS: '2'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    cpus: 2
+    volumes:
+      - ./services/alignment/app:/app/app:ro
+      - ${MEDIA_STORAGE_DIR:-./.data/media}:/media:ro
+      - alignment_models:/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 volumes:
   postgres_data:
+  alignment_models:

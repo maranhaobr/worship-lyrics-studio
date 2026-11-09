@@ -9,3 +9,9 @@ export function animationStyle(elapsedMs: number, durationMs: number, type: Visu
     transform: type === 'slide' ? `translateY(${(1 - eased) * 60}px)` : type === 'zoom' ? `scale(${0.8 + eased * 0.2})` : undefined,
   };
 }
+
+export function exitAnimationStyle(remainingMs: number, durationMs: number, type: NonNullable<VisualStyle['animation']['exitType']>): CSSProperties {
+  if (type === 'none' || durationMs <= 0) return {};
+  const progress = Math.min(1, Math.max(0, remainingMs / durationMs));
+  return { opacity: progress, transform: type === 'slide' ? `translateY(${(1 - progress) * -40}px)` : type === 'zoom' ? `scale(${1 + (1 - progress) * .08})` : undefined };
+}

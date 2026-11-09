@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { distributeWords, resizeClip, type LyricClip } from '@wls/shared';
+import { distributeWords, getSectionHeading, resizeClip, type LyricClip } from '@wls/shared';
 
 export function ClipPanel({ clip, onSave, onRepeat, onDelete, onError }: { clip: LyricClip; onSave: (clip: LyricClip) => boolean; onRepeat: () => void; onDelete: () => void; onError: (message: string) => void }) {
   const [text, setText] = useState(clip.text);
@@ -16,7 +16,7 @@ export function ClipPanel({ clip, onSave, onRepeat, onDelete, onError }: { clip:
     const next = resizeClip({ ...clip, words }, startMs, endMs);
     onSave({ ...next, text: normalized, section, words: normalized !== clip.text ? distributeWords(normalized, endMs - startMs) : next.words });
   }
-  return <section className="card space-y-4"><h2 className="font-bold">Bloco selecionado</h2><form className="space-y-3" onSubmit={save}>
+  return <section className="card space-y-4"><h2 className="font-bold">Bloco selecionado</h2>{getSectionHeading(clip.text) && <p className="text-sm text-slate-400">Este bloco é um marcador de seção e não aparece como letra no vídeo. Seu intervalo e fundo são preservados; você pode removê-lo da timeline se desejar.</p>}<form className="space-y-3" onSubmit={save}>
     <label><span className="label">Seção</span><input value={section} maxLength={100} onChange={event => setSection(event.target.value)} /></label>
     <label><span className="label">Letra</span><textarea value={text} maxLength={500} rows={3} required onChange={event => setText(event.target.value)} /></label>
     <div className="grid grid-cols-2 gap-3"><label><span className="label">Início (s)</span><input type="number" min={0} max={3600} step={0.001} required value={start} onChange={event => setStart(event.target.value)} /></label><label><span className="label">Fim (s)</span><input type="number" min={0} max={3600} step={0.001} required value={end} onChange={event => setEnd(event.target.value)} /></label></div>

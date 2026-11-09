@@ -6,7 +6,7 @@ import { prisma } from '@wls/database';
 const base = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 async function main() {
   let songId: string | undefined, projectId: string | undefined;
-  const browser = await openBrowser('chrome');
+  const browser = await openBrowser('chrome', { browserExecutable: process.env.REMOTION_BROWSER_EXECUTABLE });
   try {
     const songResponse = await fetch(`${base}/api/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Browser smoke (temporário)', sections: [{ type: 'VERSE', label: 'Verso', lines: [{ text: 'Santo para sempre' }, { text: 'Glória a Ti' }] }] }) });
     assert.equal(songResponse.status, 201); songId = (await songResponse.json() as { id: string }).id;
@@ -49,6 +49,27 @@ async function main() {
       return false;
     }), true, 'save must persist the edit');
     const saved = await prisma.visualProject.findUniqueOrThrow({ where: { id: projectId } }); assert.equal(saved.revision, 2);
+    assert.equal(await page.evaluate(async () => {
+      document.querySelector<HTMLButtonElement>('[aria-label="Aplicar Natal · Noite de luz"]')?.click();
+      for (let i = 0; i < 50; i++) {
+        const label = Array.from(document.querySelectorAll('label')).find(item => item.textContent?.startsWith('Tema decorativo'));
+        if (label?.querySelector('select')?.value === 'christmas') {
+          const save = Array.from(document.querySelectorAll('button')).find(item => item.textContent === 'Salvar projeto');
+          save?.click();
+          for (let j = 0; j < 100; j++) {
+            if (document.body.textContent?.includes('revisão 3')) return document.fonts.check('400 80px "Playfair Display"');
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return false;
+    }), true, 'seasonal template must apply, load its font and save');
+    const themed = await prisma.visualProject.findUniqueOrThrow({ where: { id: projectId } });
+    const { visualProjectSchema } = await import('@wls/shared');
+    const themedDocument = visualProjectSchema.parse(themed.document);
+    assert.equal(themedDocument.clips[2].style?.decoration?.theme, 'christmas');
+    assert.equal(themedDocument.clips[2].style?.text?.fontFamily, 'Playfair Display');
     await mkdir('out', { recursive: true });
     const screenshot = await page._client().send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     await writeFile('out/editor-smoke.png', Buffer.from(screenshot.value.data, 'base64'));

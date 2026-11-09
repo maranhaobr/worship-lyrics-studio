@@ -4,12 +4,13 @@ import { listVisualTemplates } from '@/lib/visual-template-data';
 import { listMedia } from '@/lib/media-data';
 import { getSong } from '@/lib/song-data';
 import VisualEditor from '@/components/visual-editor/visual-editor';
+import { projectBackgrounds } from '@wls/shared';
 export const dynamic = 'force-dynamic';
-export default async function VisualProjectPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function VisualProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ export?: string }> }) {
   const project = await getVisualProject((await params).id);
   if (!project) notFound();
   const [initialTemplates, sourceSong] = await Promise.all([listVisualTemplates(), project.songId ? getSong(project.songId) : null]);
-  const backgrounds = [project.document.style.background, ...initialTemplates.map(template => template.style.background)];
-  const initialAssets = await listMedia(backgrounds.flatMap(background => background.type === 'gradient' ? [] : [background.assetId]));
-  return <VisualEditor key={project.id} project={project} initialTemplates={initialTemplates} initialAssets={initialAssets} sourceSong={sourceSong} />;
+  const backgrounds = [...projectBackgrounds(project.document), ...initialTemplates.map(template => template.style.background)];
+  const initialAssets = await listMedia([...backgrounds.flatMap(background => background.type === 'gradient' ? [] : [background.assetId]), ...(project.document.referenceAudio ? [project.document.referenceAudio.assetId] : [])]);
+  return <VisualEditor key={project.id} project={project} initialTemplates={initialTemplates} initialAssets={initialAssets} sourceSong={sourceSong} autoExport={(await searchParams).export === '1'} />;
 }
