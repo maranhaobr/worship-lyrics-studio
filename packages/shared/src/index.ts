@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export * from './visual';
 export const sectionTypes = ['INTRO','VERSE','PRE_CHORUS','CHORUS','BRIDGE','OUTRO','CUSTOM'] as const;
 export const lineSchema = z.object({ text: z.string().trim().min(1).max(500), startMs: z.number().int().nonnegative().nullable().optional(), endMs: z.number().int().nonnegative().nullable().optional() }).refine(x => x.startMs == null || x.endMs == null || x.endMs > x.startMs, 'End must be after start');
 export const sectionSchema = z.object({ type: z.enum(sectionTypes), label: z.string().trim().min(1).max(100), lines: z.array(lineSchema).max(100) });

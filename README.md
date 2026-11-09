@@ -1,4 +1,12 @@
-# Worship Lyrics Studio — MVP Fase 1
+# Worship Lyrics Studio — Editor Visual 2.0
+
+O cadastro de músicas continua disponível. A Fase 2 adiciona projetos visuais independentes, templates reutilizáveis, fundos em gradiente/imagem/vídeo, quatro animações, timeline e preview Remotion.
+
+Em `/visual-projects/new`, cole ou envie a letra completa em `.txt` para gerar um MP4 com slides e tempos estimados. Cada frase pode ter texto, fundo e efeito próprios, com download do vídeo pela interface.
+
+Veja [o guia do editor visual](docs/visual-editor.md) para migração, mídia, sincronização e renderização local de MP4 sem áudio.
+
+O [serviço separado de alinhamento](docs/audio-alignment.md) aceita áudio de referência e sincroniza frases/palavras por uma fila PostgreSQL e worker Python/WhisperX, preservando a edição visual.
 
 Aplicação web para cadastro, organização e prévia de letras de louvor.
 
@@ -14,7 +22,7 @@ cp .env.example .env
 docker compose up -d
 npm install
 npm run db:generate
-npm run db:migrate -- --name init
+npm exec -w @wls/database -- prisma migrate deploy
 npm run dev
 ```
 
@@ -45,7 +53,7 @@ Exemplo de payload:
 ## Deploy online
 Hospede o app Next.js em um serviço que suporte Node.js e conecte a um PostgreSQL gerenciado via `DATABASE_URL`. Execute `npm run db:generate` e `npx prisma migrate deploy --schema packages/database/prisma/schema.prisma` no processo de deploy. O banco do Docker é apenas para desenvolvimento.
 
-**Importante:** este MVP não tem autenticação nem autorização e não deve ser exposto publicamente antes da implementação dessas camadas. Não há upload de áudio, sincronização automática, exportação MP4 nem modo ao vivo nesta fase.
+**Importante:** este MVP não tem autenticação nem autorização e não deve ser exposto publicamente antes da implementação dessas camadas. O alinhamento automático requer o worker Python opcional; a qualidade precisa ser avaliada com gravações cantadas. Não há modo ao vivo. A exportação MP4 está disponível pela interface no servidor Node local ou por comando, conforme o guia do editor. Para produção, a renderização precisa de fila e workers dedicados.
 
 ## Próximas evoluções
 - Autenticação, organizações, papéis e isolamento por tenant
@@ -53,4 +61,4 @@ Hospede o app Next.js em um serviço que suporte Node.js e conecte a um PostgreS
 - Timeline de alinhamento letra/áudio
 - Render worker Remotion/FFmpeg
 - Player ao vivo e apresentação em tela separada
-- Histórico de versões e templates persistidos
+- Histórico persistente de versões e renderização hospedada

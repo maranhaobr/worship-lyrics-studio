@@ -1,1 +1,33 @@
-{"name":"worship-lyrics-studio","private":true,"workspaces":["apps/*","packages/*"],"scripts":{"dev":"npm run dev -w @wls/web","build":"npm run build -w @wls/web","db:generate":"npm run generate -w @wls/database","db:migrate":"npm run migrate -w @wls/database","db:studio":"npm run studio -w @wls/database"},"engines":{"node":">=20.9.0"}}
+{
+  "name": "worship-lyrics-studio",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @wls/web",
+    "build": "npm run build -w @wls/web",
+    "db:generate": "npm run generate -w @wls/database",
+    "db:migrate": "npm run migrate -w @wls/database",
+    "db:studio": "npm run studio -w @wls/database",
+    "typecheck": "npm run typecheck -w @wls/web && npm run typecheck -w @wls/video && tsc -p tsconfig.tools.json",
+    "test": "tsx --test tests/visual-project.test.ts tests/animations.test.ts tests/alignment.test.ts",
+    "test:integration": "tsx --env-file=.env --test tests/api.integration.ts",
+    "test:alignment": "tsx --env-file=.env --test tests/alignment.integration.ts",
+    "test:alignment-worker": "tsx --env-file=.env tests/alignment-worker-smoke.ts",
+    "test:browser": "tsx --env-file=.env tests/browser-smoke.ts",
+    "test:lyrics-browser": "tsx --env-file=.env tests/lyrics-browser.ts",
+    "test:render": "tsx --env-file=.env --test tests/render.integration.ts",
+    "render:video": "tsx tools/render-video.ts",
+    "alignment:up": "tsx tools/start-alignment.ts"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "4.0.541",
+    "@remotion/renderer": "4.0.541",
+    "tsx": "4.21.0"
+  }
+}
