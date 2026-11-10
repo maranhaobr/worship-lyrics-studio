@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount } from './auth-helper';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
@@ -32,6 +33,7 @@ test('analyze, import, create visual project and export native slides through th
   } finally {
     if (projectId) await prisma.visualProject.deleteMany({ where: { id: projectId } });
     if (songId) await prisma.song.deleteMany({ where: { id: songId } });
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 });

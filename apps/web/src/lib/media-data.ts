@@ -1,3 +1,4 @@
+import { requireActor } from './auth/session';
 import { randomUUID } from 'node:crypto';
 import { prisma } from '@wls/database';
 import { ApiError } from './api-errors';
@@ -7,9 +8,10 @@ import type { MediaView } from '@wls/shared';
 
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 export async function listMedia(requiredIds: string[] = []): Promise<MediaView[]> {
-  const assets = await prisma.mediaAsset.findMany({ orderBy: { createdAt: 'desc' }, take: 200, select: { id: true, name: true, kind: true, durationMs: true } });
+  const {churchId}=await requireActor();
+  const assets = await prisma.mediaAsset.findMany({ where:{churchId}, orderBy: { createdAt: 'desc' }, take: 200, select: { id: true, name: true, kind: true, durationMs: true } });
   const missing = requiredIds.filter(id => !assets.some(asset => asset.id === id));
-  const required = missing.length ? await prisma.mediaAsset.findMany({ where: { id: { in: missing } }, select: { id: true, name: true, kind: true, durationMs: true } }) : [];
+  const required = missing.length ? await prisma.mediaAsset.findMany({ where: { churchId, id: { in: missing } }, select: { id: true, name: true, kind: true, durationMs: true } }) : [];
   return [...assets, ...required].map(asset => ({ ...asset, kind: asset.kind === 'audio' ? 'audio' : asset.kind === 'video' ? 'video' : 'image' }));
 }
 function identify(bytes: Buffer, audioContainer = false) {
@@ -24,6 +26,7 @@ function identify(bytes: Buffer, audioContainer = false) {
   throw new ApiError(422, 'Formato não suportado. Use PNG, JPEG, WebP, MP4, WebM, MP3, WAV ou M4A.');
 }
 export async function uploadMedia(file: File, duration: string | null) {
+  const {churchId}=await requireActor('edit');
   if (!file.size || file.size > MAX_UPLOAD_BYTES) throw new ApiError(413, 'O arquivo deve ter até 50 MB');
   const bytes = Buffer.from(await file.arrayBuffer());
   const format = identify(bytes, /\.m4a$/iu.test(file.name) || file.type === 'audio/mp4');
@@ -40,6 +43,6 @@ export async function uploadMedia(file: File, duration: string | null) {
         if (!info.streams?.some(stream => stream.codec_type === 'audio') || info.streams.some(stream => stream.codec_type === 'video') || !Number.isFinite(durationMs) || durationMs < 100 || durationMs > 3_600_000) throw new Error('Invalid audio');
       } catch { throw new ApiError(422, 'Áudio inválido. Envie MP3, WAV ou M4A com duração de até uma hora.'); }
     }
-    return await prisma.mediaAsset.create({ data: { name: file.name.slice(0, 200), kind: format.kind, mimeType: format.mimeType, storageKey, size: bytes.length, durationMs }, select: { id: true, name: true, kind: true, durationMs: true } });
+    return await prisma.mediaAsset.create({ data: { churchId, name: file.name.slice(0, 200), kind: format.kind, mimeType: format.mimeType, storageKey, size: bytes.length, durationMs }, select: { id: true, name: true, kind: true, durationMs: true } });
   } catch (error) { await removeMedia(storageKey); throw error; }
 }

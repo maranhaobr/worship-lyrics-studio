@@ -1,0 +1,24 @@
+CREATE TYPE "MemberRole" AS ENUM ('OWNER','ADMIN','EDITOR','VIEWER');
+CREATE TABLE "User" ("id" TEXT PRIMARY KEY, "email" TEXT NOT NULL UNIQUE, "name" TEXT NOT NULL, "passwordHash" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE "Church" ("id" TEXT PRIMARY KEY, "name" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE "Membership" ("id" TEXT PRIMARY KEY, "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE, "churchId" TEXT NOT NULL REFERENCES "Church"("id") ON DELETE CASCADE, "role" "MemberRole" NOT NULL DEFAULT 'VIEWER', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE UNIQUE INDEX "Membership_userId_churchId_key" ON "Membership"("userId","churchId");
+CREATE INDEX "Membership_churchId_idx" ON "Membership"("churchId");
+CREATE TABLE "Session" ("id" TEXT PRIMARY KEY, "tokenHash" TEXT NOT NULL UNIQUE, "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE, "activeChurchId" TEXT NOT NULL, "expiresAt" TIMESTAMP(3) NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "Session_userId_idx" ON "Session"("userId");
+CREATE INDEX "Session_expiresAt_idx" ON "Session"("expiresAt");
+CREATE TABLE "Invitation" ("id" TEXT PRIMARY KEY, "churchId" TEXT NOT NULL REFERENCES "Church"("id") ON DELETE CASCADE, "email" TEXT NOT NULL, "role" "MemberRole" NOT NULL, "tokenHash" TEXT NOT NULL UNIQUE, "expiresAt" TIMESTAMP(3) NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "Invitation_churchId_email_idx" ON "Invitation"("churchId","email");
+CREATE TABLE "AuthRateLimit" ("key" TEXT PRIMARY KEY, "count" INTEGER NOT NULL DEFAULT 1, "resetAt" TIMESTAMP(3) NOT NULL);
+-- Preserve existing content in an unclaimed church. Public registration cannot claim it.
+INSERT INTO "Church"("id","name") VALUES ('legacy-church','Acervo anterior');
+ALTER TABLE "Song" ADD COLUMN "churchId" TEXT NOT NULL DEFAULT 'legacy-church' REFERENCES "Church"("id");
+ALTER TABLE "VisualProject" ADD COLUMN "churchId" TEXT NOT NULL DEFAULT 'legacy-church' REFERENCES "Church"("id");
+ALTER TABLE "VisualTemplate" ADD COLUMN "churchId" TEXT NOT NULL DEFAULT 'legacy-church' REFERENCES "Church"("id");
+ALTER TABLE "MediaAsset" ADD COLUMN "churchId" TEXT NOT NULL DEFAULT 'legacy-church' REFERENCES "Church"("id");
+ALTER TABLE "Song" ALTER COLUMN "churchId" DROP DEFAULT;
+ALTER TABLE "VisualProject" ALTER COLUMN "churchId" DROP DEFAULT;
+ALTER TABLE "VisualTemplate" ALTER COLUMN "churchId" DROP DEFAULT;
+ALTER TABLE "MediaAsset" ALTER COLUMN "churchId" DROP DEFAULT;
+CREATE INDEX "Song_churchId_updatedAt_idx" ON "Song"("churchId","updatedAt");
+CREATE INDEX "VisualProject_churchId_updatedAt_idx" ON "VisualProject"("churchId","updatedAt");

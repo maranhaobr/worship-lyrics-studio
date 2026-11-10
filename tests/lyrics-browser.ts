@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount, browserLogin } from './auth-helper';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { openBrowser } from '@remotion/renderer';
@@ -8,11 +9,12 @@ const base = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 async function main() {
   let projectId: string | undefined;
   const errors: string[] = [];
-  const browser = await openBrowser('chrome');
+  const browser = await openBrowser('chrome', { browserExecutable: process.env.REMOTION_BROWSER_EXECUTABLE });
   try {
     const page = await browser.newPage({ context: () => null, logLevel: 'error', indent: false, pageIndex: 0, onBrowserLog: log => { if (log.type === 'error') errors.push(log.text); }, onLog: () => undefined });
     page.on('error', error => errors.push(error.message));
     await page.bringToFront();
+    await browserLogin(page);
     await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 });
     await page.goto({ url: `${base}/visual-projects/new`, timeout: 30000 });
     const opened = await page.evaluate(async () => {
@@ -75,6 +77,7 @@ async function main() {
   } finally {
     await browser.close({ silent: true });
     if (projectId) await prisma.visualProject.deleteMany({ where: { id: projectId } });
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 }

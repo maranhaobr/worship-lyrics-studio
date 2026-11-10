@@ -1,9 +1,11 @@
+import { requireActor } from '@/lib/auth/session';
 import { NextRequest, NextResponse } from 'next/server';
 import { apiResponse, ApiError } from '@/lib/api-errors';
 import { importProPresenter, MAX_PRO_SIZE } from '@/lib/propresenter';
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   return apiResponse(async () => {
+    await requireActor('edit');
     if (Number(request.headers.get('content-length')) > MAX_PRO_SIZE + 65536) throw new ApiError(413, 'Envie um arquivo .pro de até 5 MB.');
     const form = await request.formData();
     const file = form.get('file');

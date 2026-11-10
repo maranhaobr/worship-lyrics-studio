@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount } from './auth-helper';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unlink } from 'node:fs/promises';
@@ -81,6 +82,7 @@ test('song CRUD, independent visual projects, revisions, templates and persisten
         await prisma.mediaAsset.delete({ where: { id: mediaId } });
       }
     }
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 });
@@ -103,6 +105,7 @@ test('whole lyrics import creates an editable independent video and persists per
     assert.equal((await request('/api/visual-projects/from-lyrics', 'POST', { title: 'Vazia', lyrics: '[Refrão]' })).status, 422);
   } finally {
     if (projectId) await prisma.visualProject.deleteMany({ where: { id: projectId } });
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 });

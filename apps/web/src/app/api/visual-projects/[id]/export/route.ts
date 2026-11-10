@@ -1,3 +1,4 @@
+import { requireActor } from '@/lib/auth/session';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { Readable } from 'node:stream';
@@ -10,8 +11,9 @@ export const runtime = 'nodejs';
 export const maxDuration = 3600;
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return apiResponse(async () => {
+    const {churchId}=await requireActor('edit');
     const { id } = await params;
-    const project = await prisma.visualProject.findUnique({ where: { id }, select: { id: true } });
+    const project = await prisma.visualProject.findFirst({ where: { id, churchId }, select: { id: true } });
     if (!project) throw new ApiError(404, 'Projeto não encontrado');
     const document = visualProjectSchema.parse(await req.json());
     const result = await renderProjectVideo(document);

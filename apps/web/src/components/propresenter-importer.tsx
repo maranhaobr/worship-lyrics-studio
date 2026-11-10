@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation';
 import type { SongInput } from '@wls/shared';
 import { readResponse } from '@/hooks/use-visual-editor';
 import { useToast } from './toast-provider';
+import { usePermission } from './permissions-provider';
 type ImportPreview = { song: SongInput; slides: number; emptySlides: number; warnings: string[] };
 
 export function ProPresenterImporter() {
   const [preview, setPreview] = useState<ImportPreview | null>(null), [busy, setBusy] = useState(false);
+  const canEdit = usePermission('edit');
   const createdSong = useRef<string | null>(null);
   const notify = useToast(), router = useRouter();
   async function analyze(file: File) {
@@ -32,8 +34,8 @@ export function ProPresenterImporter() {
       router.refresh();
     } catch (error) { notify(error instanceof Error ? error.message : 'Falha ao importar', 'error'); setBusy(false); }
   }
-  return <div className="space-y-5"><section className="card space-y-3"><label><span className="label">Apresentação ProPresenter (.pro, até 5 MB)</span><input disabled={busy} type="file" accept=".pro" onChange={event => { const file = event.target.files?.[0]; if (file) void analyze(file); event.target.value = ''; }} /></label><p className="text-sm text-slate-400">A leitura não altera o arquivo original. Confira a ordem dos slides e os avisos antes de salvar.</p>{busy && <p role="status">Processando...</p>}</section>
-    {preview && <><section className="card space-y-3"><h2 className="font-bold text-xl">{preview.song.title}</h2><p>{preview.slides} slides com letras · {preview.song.sections.length} grupos</p><ul className="text-sm text-amber-200 list-disc pl-5 space-y-1">{preview.warnings.map(warning => <li key={warning}>{warning}</li>)}</ul><div className="flex flex-wrap gap-3"><button className="btn" disabled={busy} onClick={() => void save(true)}>Importar e abrir editor visual</button><button className="btn-secondary" disabled={busy} onClick={() => void save(false)}>Importar na biblioteca</button></div></section>
+  return <div className="space-y-5"><section className="card space-y-3"><label><span className="label">Apresentação ProPresenter (.pro, até 5 MB)</span><input disabled={busy || !canEdit} type="file" accept=".pro" onChange={event => { const file = event.target.files?.[0]; if (file) void analyze(file); event.target.value = ''; }} /></label><p className="text-sm text-slate-400">A leitura não altera o arquivo original. Confira a ordem dos slides e os avisos antes de salvar.</p>{busy && <p role="status">Processando...</p>}</section>
+    {preview && <><section className="card space-y-3"><h2 className="font-bold text-xl">{preview.song.title}</h2><p>{preview.slides} slides com letras · {preview.song.sections.length} grupos</p><ul className="text-sm text-amber-200 list-disc pl-5 space-y-1">{preview.warnings.map(warning => <li key={warning}>{warning}</li>)}</ul><div className="flex flex-wrap gap-3"><button className="btn" disabled={busy || !canEdit} onClick={() => void save(true)}>Importar e abrir editor visual</button><button className="btn-secondary" disabled={busy || !canEdit} onClick={() => void save(false)}>Importar na biblioteca</button></div></section>
     <div className="space-y-4">{preview.song.sections.map((section, index) => <section className="card space-y-3" key={index}><h3 className="font-bold">{section.label}</h3><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{section.lines.map((line, i) => <div className="rounded-lg bg-panel p-4" key={i}><p className="text-xs text-slate-400 mb-2">Slide {i + 1}</p><p className="whitespace-pre-line">{line.text}</p></div>)}</div></section>)}</div></>}
   </div>;
 }

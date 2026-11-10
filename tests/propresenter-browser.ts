@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount, browserLogin } from './auth-helper';
 import assert from 'node:assert/strict';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -13,6 +14,7 @@ async function main() {
     await mkdir('out', { recursive: true });
     await writeFile(fixture, exportProPresenter({ title: 'ProPresenter browser (temporário)', sections: [{ type: 'VERSE', label: 'Verso', lines: [{ text: 'Glória e paz\nSanto para sempre' }] }] }));
     const page = await browser.newPage({ context: () => null, logLevel: 'error', indent: false, pageIndex: 0, onBrowserLog: () => undefined, onLog: () => undefined });
+    await browserLogin(page);
     await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 });
     await page.goto({ url: `${process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000'}/songs/import`, timeout: 60000 });
     const client = page._client();
@@ -52,6 +54,7 @@ async function main() {
     if (projectId) { const project = await prisma.visualProject.findUnique({ where: { id: projectId } }); songId ??= project?.songId ?? undefined; await prisma.visualProject.deleteMany({ where: { id: projectId } }); }
     if (songId) await prisma.song.deleteMany({ where: { id: songId } });
     await unlink(fixture).catch(() => undefined);
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 }

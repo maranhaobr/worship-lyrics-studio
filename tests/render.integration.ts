@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount } from './auth-helper';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
@@ -43,13 +44,17 @@ test('renders gradient, image and looping video backgrounds without an audio tra
       const response = await fetch(`${base}/api/media`, { method: 'POST', body: form }); assert.equal(response.status, 201);
       const asset = await response.json() as MediaView; ids.push(asset.id); return asset;
     }
-    const video = await upload(await readFile(`${prefix}-source.mp4`), 'render-test.mp4', 'video/mp4', 500);
+    const videoBytes = await readFile(`${prefix}-source.mp4`);
+    await mkdir(resolve(serveUrl, 'public'), { recursive: true });
+    await writeFile(resolve(serveUrl, 'public', 'test-video.mp4'), videoBytes);
+    const video = await upload(videoBytes, 'render-test.mp4', 'video/mp4', 500);
     document.style.background = { type: 'video', assetId: video.id };
-    await render({ document, media: { [video.id]: { src: `${base}/api/media/${video.id}/content`, durationMs: 500 } } }, `${prefix}-video.mp4`);
+    await render({ document, media: { [video.id]: { src: 'static:test-video.mp4', durationMs: 500 } } }, `${prefix}-video.mp4`);
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aP1cAAAAASUVORK5CYII=', 'base64');
+    await writeFile(resolve(serveUrl, 'public', 'test-image.png'), png);
     const image = await upload(png, 'render-test.png', 'image/png');
     document.style.background = { type: 'image', assetId: image.id }; document.style.animation.type = 'zoom';
-    await render({ document, media: { [image.id]: { src: `${base}/api/media/${image.id}/content`, durationMs: null } } }, `${prefix}-image.mp4`);
+    await render({ document, media: { [image.id]: { src: 'static:test-image.png', durationMs: null } } }, `${prefix}-image.mp4`);
     const created = await fetch(`${base}/api/visual-projects/from-lyrics`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Export test', lyrics: 'Santo para sempre\nGlória a Ti' }) });
     assert.equal(created.status, 201); projectId = (await created.json() as { id: string }).id;
     document.style.background = { type: 'gradient', from: '#000000', to: '#000000', angle: 0 };
@@ -75,6 +80,7 @@ test('renders gradient, image and looping video backgrounds without an audio tra
       await unlink(resolve(process.env.MEDIA_STORAGE_DIR ?? '.data/media', asset.storageKey));
       await prisma.mediaAsset.delete({ where: { id } });
     }
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 });

@@ -1,4 +1,5 @@
 'use client';
+import { usePermission } from '@/components/permissions-provider';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { PlayerRef } from '@remotion/player';
@@ -23,6 +24,7 @@ const inspectorTabs = [{ id: 'templates', label: 'Templates' }, { id: 'backgroun
 const workspaceTabs = [{ id: 'timeline', label: 'Slides e timeline' }, { id: 'audio', label: 'Áudio e sincronização' }, { id: 'export', label: 'Exportar e arquivo' }] as const;
 
 export default function VisualEditor({ project, initialTemplates, initialAssets, sourceSong, autoExport = false }: { project: ProjectView; initialTemplates: TemplatePreset[]; initialAssets: MediaView[]; sourceSong: SongInput | null; autoExport?: boolean }) {
+  const canEdit=usePermission('edit');
   const editor = useVisualEditor(project);
   const { document, change } = editor;
   const [templates, setTemplates] = useState(initialTemplates);
@@ -36,7 +38,7 @@ export default function VisualEditor({ project, initialTemplates, initialAssets,
   const workspaceScroll = useRef<HTMLDivElement>(null);
   useEffect(() => { if (inspectorScroll.current) inspectorScroll.current.scrollTop = 0; }, [inspectorTab]);
   useEffect(() => { if (workspaceScroll.current) workspaceScroll.current.scrollTop = 0; }, [workspaceTab]);
-  const editingLocked = editor.saving || applyingAlignment;
+  const editingLocked = editor.saving || !canEdit || applyingAlignment;
   const clock = useEditorPlayback(document.fps);
   const playerRef = useRef<PlayerRef>(null);
   const pendingSeek = useRef<number | null>(null);
