@@ -55,7 +55,7 @@ PNG, JPEG, WebP, MP4 e WebM, até 50 MB por arquivo. O navegador precisa consegu
 
 O adaptador local grava em `.data/media` na raiz, iniciando o servidor pela raiz ou pelo workspace web. Configure `MEDIA_STORAGE_DIR` com caminho absoluto para outro diretório. Faça backup tanto do PostgreSQL quanto desse diretório. Em deploy com várias instâncias, substitua o adaptador por armazenamento de objetos compartilhado.
 
-O endpoint de conteúdo suporta HTTP Range. O MVP ainda não tem autenticação ou isolamento por organização: não publique uploads/projetos abertos na internet.
+O endpoint de conteúdo suporta HTTP Range e exige sessão da igreja proprietária da mídia. O [sistema de contas](accounts.md) controla acesso a projetos, músicas, templates e uploads.
 
 ## MP4 local sem áudio
 
@@ -69,7 +69,7 @@ Mantenha o servidor acessível durante a renderização de fundos em imagem/víd
 
 O comando usa H.264/yuv420p e `muted: true`, não sobrescreve arquivos existentes e não adiciona trilha de áudio. A interface usa `POST /api/visual-projects/:id/export`, copia as mídias referenciadas para um diretório temporário privado e remove os arquivos ao concluir o download. Aceita uma renderização por processo; requisições simultâneas recebem 429. Mantenha a página aberta durante a geração. Pode baixar o Chrome Headless na primeira execução.
 
-Esse fluxo requer Node, Chrome/FFmpeg e o repositório completo no servidor. Para SaaS público, é necessário autenticar/proteger a API e mover a renderização para uma fila durável com workers e armazenamento compartilhado. Limites de tempo de plataformas serverless podem interromper vídeos longos. Antes da oferta comercial, verifique os termos de licença do Remotion para sua organização.
+Esse fluxo requer Node, Chrome/FFmpeg e o repositório completo no servidor. A API exige autenticação e permissão de edição. Para SaaS público, é necessário mover a renderização para uma fila durável com workers e armazenamento compartilhado. Limites de tempo de plataformas serverless podem interromper vídeos longos. Antes da oferta comercial, verifique os termos de licença do Remotion para sua organização.
 
 ## Arquitetura e verificações
 

@@ -16,6 +16,8 @@ enum SectionType {
   CUSTOM
 }
 model Song {
+  churchId  String
+  church    Church @relation(fields: [churchId], references: [id])
   id        String        @id @default(cuid())
   title     String
   artist    String?
@@ -26,6 +28,7 @@ model Song {
   sections  SongSection[]
   visualProjects VisualProject[]
   @@index([title])
+  @@index([churchId, updatedAt])
 }
 model SongSection {
   id        String      @id @default(cuid())
@@ -49,6 +52,8 @@ model LyricLine {
 }
 
 model VisualProject {
+  churchId  String
+  church    Church @relation(fields: [churchId], references: [id])
   id        String   @id @default(cuid())
   songId    String?
   song      Song?    @relation(fields: [songId], references: [id], onDelete: SetNull)
@@ -59,9 +64,12 @@ model VisualProject {
   updatedAt DateTime @updatedAt
   alignmentJobs AlignmentJob[]
   @@index([songId, updatedAt])
+  @@index([churchId, updatedAt])
 }
 
 model VisualTemplate {
+  churchId  String
+  church    Church @relation(fields: [churchId], references: [id])
   id        String   @id @default(cuid())
   name      String
   style     Json
@@ -70,6 +78,8 @@ model VisualTemplate {
 }
 
 model MediaAsset {
+  churchId   String
+  church     Church @relation(fields: [churchId], references: [id])
   id         String   @id @default(cuid())
   name       String
   kind       String
@@ -113,4 +123,75 @@ model AlignmentJob {
 model AlignmentWorker {
   id        String @id
   updatedAt DateTime @default(now())
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  sessions Session[]
+}
+
+model Church {
+  id String @id @default(cuid())
+  name String
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  invitations Invitation[]
+  songs Song[]
+  projects VisualProject[]
+  templates VisualTemplate[]
+  media MediaAsset[]
+}
+
+model Membership {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  churchId String
+  church Church @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  role MemberRole @default(VIEWER)
+  createdAt DateTime @default(now())
+  @@unique([userId, churchId])
+  @@index([churchId])
+}
+
+model Session {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeChurchId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Invitation {
+  id String @id @default(cuid())
+  churchId String
+  church Church @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  email String
+  role MemberRole
+  tokenHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([churchId, email])
+}
+
+model AuthRateLimit {
+  key String @id
+  count Int @default(1)
+  resetAt DateTime
 }

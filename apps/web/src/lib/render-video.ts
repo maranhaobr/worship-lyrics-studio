@@ -1,3 +1,4 @@
+import { requireActor } from './auth/session';
 import { randomUUID } from 'node:crypto';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -15,6 +16,7 @@ import { validateProjectMedia } from './visual-project-data';
 const globalRender = globalThis as unknown as { wlsRender?: { busy: boolean } };
 const state = globalRender.wlsRender ??= { busy: false };
 export async function renderProjectVideo(document: VisualProjectDocument) {
+  const {churchId}=await requireActor('edit');
   if (state.busy) throw new ApiError(429, 'Outro vídeo está sendo gerado. Tente novamente em instantes.');
   state.busy = true;
   const directory = resolve(workspaceRoot(), '.data/renders', randomUUID());
@@ -22,7 +24,7 @@ export async function renderProjectVideo(document: VisualProjectDocument) {
   try {
     await validateProjectMedia(document);
     const ids = [...new Set(projectBackgrounds(document).flatMap(background => background.type === 'gradient' ? [] : [background.assetId]))];
-    const assets = await prisma.mediaAsset.findMany({ where: { id: { in: ids } } });
+    const assets = await prisma.mediaAsset.findMany({ where: { churchId, id: { in: ids } } });
     const publicDir = resolve(directory, 'public');
     await mkdir(publicDir, { recursive: true });
     const media: CompositionProps['media'] = {};

@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount } from './auth-helper';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile, unlink } from 'node:fs/promises';
@@ -40,6 +41,7 @@ test('audio upload, persistent queue, cancellation and conflict-safe application
   } finally {
     if (id) await prisma.visualProject.deleteMany({ where: { id } });
     if (audioId) { const asset = await prisma.mediaAsset.findUniqueOrThrow({ where: { id: audioId } }); await unlink(resolve(process.env.MEDIA_STORAGE_DIR ?? '.data/media', asset.storageKey)); await prisma.mediaAsset.delete({ where: { id: audioId } }); }
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 });

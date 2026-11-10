@@ -47,7 +47,7 @@ O resultado exige aplicação explícita. Cancelar impede a publicação do resu
 
 O Next e o worker compartilham `.data/media`; o worker monta esse diretório somente para leitura. Se definir `MEDIA_STORAGE_DIR`, use um caminho absoluto acessível ao Docker Desktop. O endereço do PostgreSQL dentro do Compose usa `postgres:5432`; o app no host usa a porta publicada `5433`.
 
-O worker não publica HTTP nem precisa de token de usuário/Hugging Face para diarização, pois não faz diarização. O banco atual usa credenciais locais de desenvolvimento. Antes de hospedar o SaaS, implemente autenticação, isolamento por organização, quotas, retenção de áudio e armazenamento compartilhado. Workers podem ser escalados separadamente do Next.
+O worker não publica HTTP nem precisa de token de usuário/Hugging Face para diarização, pois não faz diarização. O banco atual usa credenciais locais de desenvolvimento. A aplicação exige sessão e permissão de edição, com isolamento por igreja. Antes de hospedar o SaaS, implemente quotas, retenção de áudio e armazenamento compartilhado. Consulte [contas e permissões](accounts.md) para configuração da origem HTTPS e convites. Workers podem ser escalados separadamente do Next.
 
 ## Diagnóstico e testes
 

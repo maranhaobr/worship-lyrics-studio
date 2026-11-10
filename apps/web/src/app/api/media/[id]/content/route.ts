@@ -1,3 +1,4 @@
+import { requireActor } from '@/lib/auth/session';
 import { NextRequest } from 'next/server';
 import { prisma } from '@wls/database';
 import { apiResponse, ApiError } from '@/lib/api-errors';
@@ -5,7 +6,8 @@ import { readMedia } from '@/lib/storage/local';
 export const runtime = 'nodejs';
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return apiResponse(async () => {
-    const asset = await prisma.mediaAsset.findUnique({ where: { id: (await params).id } });
+    const {churchId}=await requireActor('read');
+    const asset = await prisma.mediaAsset.findFirst({ where: { id: (await params).id, churchId } });
     if (!asset) throw new ApiError(404, 'Mídia não encontrada');
     let bytes: Buffer;
     try { bytes = await readMedia(asset.storageKey); } catch { throw new ApiError(404, 'Arquivo não encontrado'); }

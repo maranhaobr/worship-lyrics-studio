@@ -5,7 +5,7 @@ export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 export async function apiResponse(action: () => Promise<Response>): Promise<Response> {
-  try { return await action(); }
+  try { const response = await action(); response.headers.set('Cache-Control', 'private, no-store'); return response; }
   catch (error) {
     if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (error instanceof ZodError) return NextResponse.json({ error: 'Dados inválidos', details: error.flatten() }, { status: 422 });

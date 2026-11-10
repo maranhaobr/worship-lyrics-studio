@@ -1,3 +1,4 @@
+import { authenticatedFetch as fetch, cleanupTestAccount, browserLogin } from './auth-helper';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { openBrowser } from '@remotion/renderer';
@@ -15,6 +16,7 @@ async function main() {
     const errors: string[] = [];
     const page = await browser.newPage({ context: () => null, logLevel: 'error', indent: false, pageIndex: 0, onBrowserLog: log => { if (log.type === 'error') errors.push(log.text); }, onLog: () => undefined });
     page.on('error', error => errors.push(error.message));
+    await browserLogin(page);
     await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 });
     await page.goto({ url: `${base}/visual-projects/${projectId}`, timeout: 30000 });
     assert.equal(await page.evaluate(async () => {
@@ -81,6 +83,7 @@ async function main() {
     await browser.close({ silent: true });
     if (projectId) await prisma.visualProject.deleteMany({ where: { id: projectId } });
     if (songId) await prisma.song.deleteMany({ where: { id: songId } });
+    await cleanupTestAccount();
     await prisma.$disconnect();
   }
 }

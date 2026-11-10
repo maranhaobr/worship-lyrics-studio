@@ -1,4 +1,5 @@
 'use client';
+import { usePermission } from '@/components/permissions-provider';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { PlayerRef } from '@remotion/player';
@@ -18,6 +19,7 @@ import { ExportPanel } from './export-panel';
 import { AlignmentPanel } from './alignment-panel';
 
 export default function VisualEditor({ project, initialTemplates, initialAssets, sourceSong, autoExport = false }: { project: ProjectView; initialTemplates: TemplatePreset[]; initialAssets: MediaView[]; sourceSong: SongInput | null; autoExport?: boolean }) {
+  const canEdit=usePermission('edit');
   const editor = useVisualEditor(project);
   const { document, change } = editor;
   const [templates, setTemplates] = useState(initialTemplates);
@@ -25,7 +27,7 @@ export default function VisualEditor({ project, initialTemplates, initialAssets,
   const [selectedId, setSelectedId] = useState<string | null>(document.clips[0]?.id ?? null);
   const [styleScope, setStyleScope] = useState<'video' | 'slide'>('slide');
   const [applyingAlignment, setApplyingAlignment] = useState(false);
-  const editingLocked = editor.saving || applyingAlignment;
+  const editingLocked = (editor.saving || !canEdit) || applyingAlignment;
   const clock = useEditorPlayback(document.fps);
   const playerRef = useRef<PlayerRef>(null);
   const pendingSeek = useRef<number | null>(null);
