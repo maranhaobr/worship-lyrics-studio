@@ -17,11 +17,15 @@ def search_windows(clips, recognized, duration):
     matches = match_words(words, recognized)
     if len(matches) / max(1, len(words)) < 0.35:
         raise ValueError('Não foi possível relacionar a letra à gravação. Confira a versão, as repetições e a presença da voz no áudio.')
-    anchors, cursor = [], 0
+    anchors, margins, cursor = [], [], 0
     for clip in clips:
         count = len(clip['text'].split())
         found = [matches[i] for i in range(cursor, cursor + count) if i in matches]
         anchors.append((found[0]['start'], found[-1]['end']) if found else None)
+        indices = [i for i in range(count) if cursor + i in matches]
+        # Only missing edge words need extra search space. Do not force an
+        # instrumental gap or the remaining recording into an anchored phrase.
+        margins.append((max(.75, indices[0] * .65), max(.75, (count - indices[-1] - 1) * .65)) if indices else (0, 0))
         cursor += count
     centers = [(anchor[0] + anchor[1]) / 2 if anchor else None for anchor in anchors]
     for i, center in enumerate(centers):
@@ -37,7 +41,14 @@ def search_windows(clips, recognized, duration):
         boundary = (anchors[i - 1][1] + anchors[i][0]) / 2 if anchors[i - 1] and anchors[i] else (centers[i - 1] + centers[i]) / 2
         boundaries.append(max(boundaries[-1], min(duration, boundary)))
     boundaries.append(duration)
-    return [(boundaries[i], boundaries[i + 1], anchors[i] is None) for i in range(len(clips))]
+    windows = []
+    for i, anchor in enumerate(anchors):
+        low, high = boundaries[i], boundaries[i + 1]
+        if anchor:
+            low = max(low, anchor[0] - margins[i][0])
+            high = min(high, anchor[1] + margins[i][1])
+        windows.append((low, high, anchor is None))
+    return windows
 
 
 def timed_clip(clip, recognized, low, high, uncertain=False):

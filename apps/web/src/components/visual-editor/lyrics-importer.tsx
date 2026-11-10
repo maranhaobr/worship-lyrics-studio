@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { lyricsImportSchema, projectFromLyrics, type LyricsImportInput, type TemplatePreset } from '@wls/shared';
 import { readResponse } from '@/hooks/use-visual-editor';
+import { useToastFeedback } from '@/components/toast-provider';
 
 export function LyricsImporter({ templates }: { templates: TemplatePreset[] }) {
   const router = useRouter();
@@ -11,7 +12,8 @@ export function LyricsImporter({ templates }: { templates: TemplatePreset[] }) {
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? 'builtin-atmospheric');
   const [pace, setPace] = useState<LyricsImportInput['pace']>('balanced');
   const [varyEffects, setVaryEffects] = useState(true);
-  const [busy, setBusy] = useState(false), [reading, setReading] = useState(false), [error, setError] = useState('');
+  const [busy, setBusy] = useState(false), [reading, setReading] = useState(false);
+  const { setError, setMessage } = useToastFeedback();
   const preview = useMemo(() => {
     if (!lyrics.trim()) return null;
     try {
@@ -26,6 +28,7 @@ export function LyricsImporter({ templates }: { templates: TemplatePreset[] }) {
       const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
       if (text.length > 100_000) throw new Error('A letra deve ter até 100 mil caracteres.');
       setLyrics(text); if (!title.trim()) setTitle(file.name.replace(/\.txt$/iu, '').slice(0, 200));
+      setMessage('Letra importada');
     } catch (error) { setError(error instanceof TypeError ? 'Salve o arquivo de texto com codificação UTF-8 e tente novamente.' : error instanceof Error ? error.message : 'Erro ao ler arquivo'); }
     finally { setReading(false); }
   }
@@ -35,7 +38,7 @@ export function LyricsImporter({ templates }: { templates: TemplatePreset[] }) {
     setBusy(true); setError('');
     try {
       const project = await readResponse<{ id: string }>(await fetch('/api/visual-projects/from-lyrics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed.data) }));
-      router.push(`/visual-projects/${project.id}${render ? '?export=1' : ''}`);
+      setMessage('Projeto criado com a letra completa'); router.push(`/visual-projects/${project.id}${render ? '?export=1' : ''}`);
     } catch (error) { setError(error instanceof Error ? error.message : 'Erro ao preparar vídeo'); setBusy(false); }
   }
   return <form className="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start" onSubmit={event => { event.preventDefault(); void create(true); }}>
@@ -50,7 +53,7 @@ export function LyricsImporter({ templates }: { templates: TemplatePreset[] }) {
       <label className="flex items-center gap-3 text-sm"><input className="!w-auto" type="checkbox" checked={varyEffects} onChange={event => setVaryEffects(event.target.checked)} />Variar efeitos entre as frases</label>
       {preview?.document && <p role="status" className="rounded-lg bg-panel p-3 text-sm">{preview.document.clips.length} slides · duração estimada {(preview.document.durationMs / 60000).toFixed(1)} min</p>}
       <p className="text-sm text-slate-400">O vídeo fica pronto em MP4 sem áudio. Os tempos são estimados pela letra; não são sincronizados automaticamente com uma gravação.</p>
-      {(error || preview?.error) && <p role="alert" className="text-red-300 text-sm">{error || preview?.error}</p>}
+      {preview?.error && <p role="alert" className="text-red-300 text-sm">{preview.error}</p>}
       <button className="btn w-full" disabled={!lyrics.trim() || Boolean(preview?.error)} type="submit">{busy ? 'Preparando vídeo...' : 'Gerar vídeo completo'}</button>
       <button className="btn-secondary w-full" disabled={!lyrics.trim() || Boolean(preview?.error)} type="button" onClick={() => void create(false)}>Revisar slides antes de gerar</button>
       <p className="text-xs text-slate-400">Você poderá editar cada frase, trocar fundos e efeitos e gerar novas versões a qualquer momento.</p>

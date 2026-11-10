@@ -37,6 +37,12 @@ As decorações e os movimentos são calculados por frame, compartilhados entre 
 
 ## Fluxo de edição
 
+No desktop (a partir de 1024 px de largura e 640 px de altura), o editor ocupa a área útil da janela. O preview permanece visível; a timeline e as configurações têm rolagens independentes. As abas **Templates**, **Fundo**, **Tema**, **Texto** e **Animação** evitam uma lista longa de controles. Abaixo do preview, alterne entre **Slides e timeline**, **Áudio e sincronização** e **Exportar e arquivo**. As abas preservam os formulários e os processamentos em andamento. Em telas menores, o conteúdo volta ao fluxo vertical.
+
+Use **Recolher menu** no canto superior esquerdo para ampliar a área de trabalho. Os ícones continuam acessíveis e **Expandir menu** restaura os rótulos. A preferência é lembrada neste navegador.
+
+As ações usam notificações flutuantes no canto superior direito, sem deslocar o preview: verde para sucesso (4 s), vermelho para erro (7 s), amarelo para atenção (6 s) e azul para informação (5 s). Elas podem ser fechadas manualmente e pausam ao receber foco ou passar o mouse. Até quatro ficam visíveis; mensagens idênticas são agrupadas. O provedor global preserva as notificações durante a navegação. Progresso, resultados que exigem revisão e falhas persistentes do preview continuam junto da ferramenta correspondente; confirmações de exclusão continuam exigindo uma decisão explícita.
+
 - Cada projeto copia a letra salva e recebe IDs próprios; alterações/exclusão da música não apagam seus projetos.
 - Reimportar a letra substitui os blocos e tempos pela versão da música carregada na página. Pode ser desfeito.
 - Cada linha vira um bloco de quatro segundos quando não há tempos cadastrados. Tempos sobrepostos da origem são normalizados.

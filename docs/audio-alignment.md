@@ -36,6 +36,7 @@ A letra deve conter a sequência realmente cantada, incluindo repetições. O si
 - Um token de concessão impede que um worker antigo publique resultados após cancelamento ou reatribuição.
 - Só há uma tarefa ativa por projeto, garantida por índice parcial único no PostgreSQL.
 - O reconhecimento de voz encontra referências temporais; a comparação sequencial com a letra delimita janelas locais. O alinhamento forçado mede tempos das palavras nessas janelas.
+- Janelas com palavras reconhecidas ficam próximas dessas palavras, sem absorver toda a introdução, pausas instrumentais longas ou o restante da gravação na última frase. Se o áudio continuar mais de 15 segundos após a última frase alinhada, o resultado pede conferir repetições ou partes ausentes; não inventa slides para preencher esse intervalo. Falhas de localização identificam o slide e a frase envolvidos.
 - A transcrição mantém a gravação inteira, sem filtro de atividade de fala (VAD), pois esse filtro pode descartar voz cantada junto do acompanhamento. O processamento em CPU pode levar vários minutos.
 - Trechos com palavras interpoladas/baixa pontuação são sinalizados. Se uma frase não puder ser reconhecida com segurança, a tarefa falha em vez de apresentar tempos estimados como sincronização medida.
 - Aplicar altera apenas tempos e duração, preservando IDs, letra, seções, estilos e fundos dos slides. Marcadores antigos de seção são excluídos da timeline alinhada.

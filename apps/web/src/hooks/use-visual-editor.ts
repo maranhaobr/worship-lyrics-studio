@@ -2,6 +2,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { visualProjectSchema, type ProjectView, type VisualProjectDocument } from '@wls/shared';
 import { editorReducer } from '@/lib/editor/reducer';
+import { useToastFeedback } from '@/components/toast-provider';
 
 export async function readResponse<T>(response: Response): Promise<T> {
   const body: unknown = await response.json();
@@ -15,8 +16,7 @@ export function useVisualEditor(project: ProjectView) {
   const [saved, setSaved] = useState({ name: project.name, document: project.document });
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const { setError, setMessage } = useToastFeedback();
   const dirty = name !== saved.name || history.present !== saved.document;
   const presentRef = useRef(history.present);
   presentRef.current = history.present;
@@ -54,6 +54,6 @@ export function useVisualEditor(project: ProjectView) {
     setName(project.name); setRevision(project.revision); setSaved({ name: project.name, document });
     setError(''); setMessage('Alinhamento aplicado. Confira a sincronização no preview.');
   }
-  return { document: history.present, name, setName, revision, dirty, saving, save, error, setError, message, setMessage, change, acceptSaved,
+  return { document: history.present, name, setName, revision, dirty, saving, save, setError, setMessage, change, acceptSaved,
     undo: () => dispatch({ type: 'undo' }), redo: () => dispatch({ type: 'redo' }), canUndo: history.past.length > 0, canRedo: history.future.length > 0 };
 }

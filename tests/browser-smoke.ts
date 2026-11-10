@@ -45,7 +45,7 @@ async function main() {
     }), true, 'redo must restore the new clip');
     assert.equal(await page.evaluate(async () => {
       const button = Array.from(document.querySelectorAll('button')).find(item => item.textContent === 'Salvar projeto'); button?.click();
-      for (let i = 0; i < 100; i++) { if (document.querySelector('[role="status"]')?.textContent === 'Projeto salvo') return true; await new Promise(resolve => setTimeout(resolve, 100)); }
+      for (let i = 0; i < 100; i++) { if (document.querySelector('[data-toast-kind="success"]')?.textContent?.includes('Projeto salvo')) return true; await new Promise(resolve => setTimeout(resolve, 100)); }
       return false;
     }), true, 'save must persist the edit');
     const saved = await prisma.visualProject.findUniqueOrThrow({ where: { id: projectId } }); assert.equal(saved.revision, 2);
@@ -70,6 +70,44 @@ async function main() {
     const themedDocument = visualProjectSchema.parse(themed.document);
     assert.equal(themedDocument.clips[2].style?.decoration?.theme, 'christmas');
     assert.equal(themedDocument.clips[2].style?.text?.fontFamily, 'Playfair Display');
+    assert.equal(await page.evaluate(async () => {
+      for (let i = 0; i < 60; i++) {
+        if (!document.querySelector('[data-toast-kind="success"]')) return true;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return false;
+    }), true, 'success notification must disappear automatically');
+    assert.equal(await page.evaluate(async () => {
+      const label = Array.from(document.querySelectorAll('label')).find(item => item.textContent?.startsWith('Duração total'));
+      const input = label?.querySelector('input');
+      if (!input) return false;
+      input.value = '0'; input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const error = document.querySelector('[data-toast-kind="error"]');
+      if (!error?.classList.contains('bg-red-950') || !error.querySelector('[role="alert"]')) return false;
+      error.querySelector<HTMLButtonElement>('button')?.click();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return !document.querySelector('[data-toast-kind="error"]');
+    }), true, 'invalid changes must show a red accessible error toast that can be dismissed');
+    assert.equal(await page.evaluate(async () => {
+      const preview = document.querySelector<HTMLElement>('[data-editor-preview]');
+      const inspector = document.querySelector<HTMLElement>('[data-inspector-scroll]');
+      if (!preview || !inspector) return false;
+      document.getElementById('inspector-tab-text')?.click();
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const before = preview.getBoundingClientRect();
+      inspector.scrollTop = inspector.scrollHeight;
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const after = preview.getBoundingClientRect();
+      return inspector.scrollTop > 0 && Math.abs(before.top - after.top) < 1 && after.top >= 0 && after.bottom <= window.innerHeight && document.documentElement.scrollHeight <= window.innerHeight + 1;
+    }), true, 'settings must scroll independently while the preview stays fully visible');
+    assert.equal(await page.evaluate(async () => {
+      const columns = document.querySelector('.editor-columns');
+      const before = columns?.getBoundingClientRect().width ?? 0;
+      document.querySelector<HTMLButtonElement>('[aria-label="Recolher menu"]')?.click();
+      await new Promise(resolve => setTimeout(resolve, 150));
+      return (columns?.getBoundingClientRect().width ?? 0) > before && document.querySelector('[aria-label="Expandir menu"]')?.getAttribute('aria-expanded') === 'false' && localStorage.getItem('wls-sidebar-collapsed') === 'true';
+    }), true, 'collapsing navigation must widen the workspace and remember the preference');
     await mkdir('out', { recursive: true });
     const screenshot = await page._client().send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     await writeFile('out/editor-smoke.png', Buffer.from(screenshot.value.data, 'base64'));
