@@ -35,9 +35,11 @@ class AlignmentEngine:
         output = []
         for i, (clip, (low, high, uncertain)) in enumerate(zip(clips, windows)):
             if high - low > 120 or high - low < 0.1:
-                raise ValueError('Uma frase não foi localizada com segurança. Confira se a letra tem todas as repetições da gravação.')
+                raise ValueError(f'Não foi possível localizar o slide {i + 1}: "{clip["text"][:100]}". Confira a letra e as repetições desse trecho da gravação.')
             aligned = whisperx.align([{'start': low, 'end': high, 'text': clip['text']}], self.aligner, self.metadata, audio, device, return_char_alignments=False)
             output.append(timed_clip(clip, aligned.get('word_segments', []), low, high, uncertain))
             progress(45 + round((i + 1) / len(clips) * 50))
         warnings = [f'Revise a sincronização de: {clip["text"][:100]}' for clip, timed in zip(clips, output) if timed['needsReview']]
+        if output and duration * 1000 - output[-1]['endMs'] > 15000:
+            warnings.append('A gravação continua por mais de 15 segundos após a última frase alinhada. Confira se faltam repetições ou outras partes na letra; esse restante ficará sem letras.')
         return {'durationMs': round(duration * 1000), 'clips': output, 'warnings': warnings}

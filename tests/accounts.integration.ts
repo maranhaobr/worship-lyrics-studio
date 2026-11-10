@@ -21,6 +21,7 @@ test('church isolation, role hierarchy, invitations, sessions and last-owner pro
   const a = new Client(), b = new Client(), viewer = new Client(), admin = new Client(), outsider = new Client();
   try {
     assert.equal((await outsider.request('/api/songs')).status, 401);
+    assert.equal((await outsider.request('/api/songs/import/propresenter', 'POST', new FormData())).status, 401);
     for (const [client, i] of [[a, 0], [b, 1]] as const) {
       const response = await client.request('/api/auth/register', 'POST', { email: emails[i], password, name: `Pessoa ${i}`, churchName: `Igreja ${prefix}-${i}` });
       assert.equal(response.status, 201, await response.clone().text());
@@ -37,6 +38,8 @@ test('church isolation, role hierarchy, invitations, sessions and last-owner pro
     assert.equal((await b.request(`/api/visual-projects/${project.id}`)).status, 404);
     assert.equal((await b.request(`/api/visual-projects/${project.id}/alignment`)).status, 404);
     assert.equal((await b.request(`/api/visual-projects/${project.id}/export`, 'POST', {})).status, 404);
+    assert.equal((await b.request(`/api/songs/${created.id}/propresenter`)).status, 404);
+    assert.equal((await b.request(`/api/visual-projects/${project.id}/propresenter`, 'POST', {})).status, 404);
     const projectView = await (await a.request(`/api/visual-projects/${project.id}`)).json() as { document: VisualProjectDocument };
     const mediaForm = new FormData(); mediaForm.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aP1cAAAAASUVORK5CYII=', 'base64')], { type: 'image/png' }), 'test.png');
     const media = await (await a.request('/api/media', 'POST', mediaForm)).json(); assert.ok(media.id);
@@ -56,6 +59,8 @@ test('church isolation, role hierarchy, invitations, sessions and last-owner pro
     assert.equal((await viewer.request('/api/auth/register', 'POST', { email: emails[2], password, name: 'Leitor', invitation: viewerToken })).status, 201);
     assert.equal((await viewer.request(`/api/songs/${created.id}`)).status, 200);
     assert.equal((await viewer.request('/api/songs', 'POST', song)).status, 403);
+    assert.equal((await viewer.request('/api/songs/import/propresenter', 'POST', new FormData())).status, 403);
+    assert.equal((await viewer.request(`/api/visual-projects/${project.id}/propresenter`, 'POST', {})).status, 403);
     assert.equal((await viewer.request(`/api/songs/${created.id}`, 'DELETE')).status, 403);
     assert.equal((await viewer.request(`/api/visual-projects/${project.id}/export`, 'POST', projectView.document)).status, 403);
     assert.equal((await viewer.request('/api/auth/accept-invitation', 'POST', { invitation: viewerToken })).status, 422);

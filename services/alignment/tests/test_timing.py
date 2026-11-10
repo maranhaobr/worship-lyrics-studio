@@ -18,10 +18,25 @@ class TimingTests(unittest.TestCase):
         clips = [{'id': 'a', 'text': 'Glória a Ti'}, {'id': 'b', 'text': 'Glória a Ti'}]
         recognized = [{'word': word, 'start': start, 'end': start + .3} for word, start in [('gloria', 2), ('a', 2.4), ('ti', 2.8), ('gloria', 8), ('a', 8.4), ('ti', 8.8)]]
         windows = search_windows(clips, recognized, 12)
-        self.assertEqual(windows[0][0], 0)
-        self.assertEqual(windows[1][1], 12)
-        self.assertEqual(windows[0][1], windows[1][0])
+        self.assertGreater(windows[0][0], 0)
+        self.assertLess(windows[1][1], 12)
+        self.assertLessEqual(windows[0][1], windows[1][0])
         self.assertGreater(windows[1][0], 3)
+
+    def test_instrumental_tail_does_not_become_a_long_final_phrase(self):
+        clips = [{'id': 'a', 'text': 'Santo pra sempre'}]
+        recognized = [{'word': text, 'start': start, 'end': start + .5} for text, start in [('Santo', 9), ('pra', 10), ('sempre', 11)]]
+        low, high, uncertain = search_windows(clips, recognized, 310)[0]
+        self.assertGreaterEqual(low, 8)
+        self.assertLess(high, 13)
+        self.assertFalse(uncertain)
+
+    def test_long_gaps_between_recognized_phrases_remain_gaps(self):
+        clips = [{'id': 'a', 'text': 'Santo'}, {'id': 'b', 'text': 'Glória'}]
+        recognized = [{'word': 'Santo', 'start': 10, 'end': 12}, {'word': 'Glória', 'start': 200, 'end': 202}]
+        windows = search_windows(clips, recognized, 310)
+        self.assertLess(windows[0][1], 14)
+        self.assertGreater(windows[1][0], 198)
 
     def test_missing_words_are_explicitly_marked_for_review(self):
         clip = {'id': 'a', 'text': 'Santo para sempre'}

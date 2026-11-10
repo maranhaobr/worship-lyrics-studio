@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { alignmentJobSchema, type AlignmentJobView, type MediaView, type ProjectView, type VisualProjectDocument } from '@wls/shared';
 import { readResponse } from '@/hooks/use-visual-editor';
+import { useToast, useToastFeedback } from '@/components/toast-provider';
 
 export function AlignmentPanel({ projectId, revision, dirty, saving, document, assets, onAudio, onRemoveAudio, onApplied, onApplying }: {
   projectId: string; revision: number; dirty: boolean; saving: boolean; document: VisualProjectDocument; assets: MediaView[];
@@ -9,7 +10,10 @@ export function AlignmentPanel({ projectId, revision, dirty, saving, document, a
   onApplying: (busy: boolean) => void;
 }) {
   const [job, setJob] = useState<AlignmentJobView | null>(null);
-  const [error, setError] = useState(''), [busy, setBusy] = useState(false), [refresh, setRefresh] = useState(0);
+  const [busy, setBusy] = useState(false), [refresh, setRefresh] = useState(0);
+  const { setError, setMessage } = useToastFeedback();
+  const notify = useToast();
+  const lastStatus = useRef<string | null>(null), connectionError = useRef(false);
   const [reviewed, setReviewed] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const active = job?.status === 'QUEUED' || job?.status === 'PROCESSING';
@@ -23,13 +27,20 @@ export function AlignmentPanel({ projectId, revision, dirty, saving, document, a
         const next = data === null ? null : alignmentJobSchema.parse(data);
         if (!live) return;
         setError('');
+        if (connectionError.current) { notify('Conexão com o alinhamento restabelecida.', 'info'); connectionError.current = false; }
+        const statusKey = next ? `${next.id}:${next.status}` : null;
+        if (lastStatus.current && statusKey !== lastStatus.current) {
+          if (next?.status === 'FAILED') setError(next.error ?? 'Falha no alinhamento');
+          if (next?.status === 'COMPLETED') notify(next.result?.warnings.length ? 'Alinhamento concluído com trechos para revisar. Abra Áudio e sincronização.' : 'Alinhamento concluído. Abra Áudio e sincronização para aplicar.', next.result?.warnings.length ? 'warning' : 'success');
+        }
+        lastStatus.current = statusKey;
         setJob(next);
         if (next?.status === 'QUEUED' || next?.status === 'PROCESSING') timer = setTimeout(poll, 2000);
-      } catch { if (live) { setError('Não foi possível consultar o alinhamento. Tentando novamente...'); timer = setTimeout(poll, 5000); } }
+      } catch { if (live) { if (!connectionError.current) { notify('Não foi possível consultar o alinhamento. Tentando novamente...', 'warning'); connectionError.current = true; } timer = setTimeout(poll, 5000); } }
     }
     void poll();
     return () => { live = false; controller.abort(); if (timer) clearTimeout(timer); };
-  }, [projectId, refresh]);
+  }, [projectId, refresh, notify, setError]);
   async function upload(file: File) {
     setBusy(true); setError('');
     try {
@@ -38,6 +49,7 @@ export function AlignmentPanel({ projectId, revision, dirty, saving, document, a
       const asset = await readResponse<MediaView>(await fetch('/api/media', { method: 'POST', body: form }));
       if (asset.kind !== 'audio') throw new Error('O arquivo precisa conter apenas áudio');
       onAudio(asset);
+      setMessage('Áudio enviado. Salve o projeto para iniciar o alinhamento.');
     } catch (error) { setError(error instanceof Error ? error.message : 'Falha no envio do áudio'); }
     finally { setBusy(false); if (input.current) input.current.value = ''; }
   }
@@ -47,6 +59,8 @@ export function AlignmentPanel({ projectId, revision, dirty, saving, document, a
     try {
       const data = await readResponse<unknown>(await fetch(`/api/visual-projects/${projectId}/alignment`, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision, jobId: job?.id }) }));
       if (method === 'PUT') onApplied(data as ProjectView);
+      if (method === 'POST') notify('Alinhamento enviado para processamento.', 'info');
+      if (method === 'DELETE') notify('Alinhamento cancelado.', 'info');
       setReviewed(false); setRefresh(value => value + 1);
     } catch (error) { setError(error instanceof Error ? error.message : 'Falha no alinhamento'); }
     finally { setBusy(false); if (method === 'PUT') onApplying(false); }
@@ -67,6 +81,5 @@ export function AlignmentPanel({ projectId, revision, dirty, saving, document, a
     </div>}
     {job?.status === 'APPLIED' && <p className="text-sm text-emerald-300">Tempos aplicados. Você pode refinar cada frase e palavra na timeline.</p>}
     {busy && <p className="text-sm text-slate-400">Processando solicitação...</p>}
-    {error && <p role="alert" className="text-red-300">{error}</p>}
   </section>;
 }
