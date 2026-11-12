@@ -1,0 +1,61 @@
+import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
+import test from 'node:test';
+import { prisma } from '@wls/database';
+import { digest } from '../apps/web/src/lib/auth/crypto';
+import { clearTestMail, emailToken } from './email-helper';
+
+const base = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
+const post = (action: string, body: object, cookie = '', origin = new URL(base).origin) => fetch(`${base}/api/auth/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, Cookie: cookie }, body: JSON.stringify(body) });
+test('verification and password recovery enforce token purpose, expiry, single use and session revocation', { timeout: 180000 }, async () => {
+  const email = `email-${randomBytes(8).toString('hex')}@example.test`, password = randomBytes(24).toString('base64url'), nextPassword = randomBytes(24).toString('base64url');
+  let churchId: string | undefined;
+  try {
+    const registered = await post('register', { email, password, name: 'Teste de e-mail', churchName: 'Igreja de teste de e-mail' });
+    assert.equal(registered.status, 201, await registered.clone().text());
+    assert.equal(registered.headers.get('set-cookie'), null, 'registration must not grant an unverified session');
+    const user = await prisma.user.findUniqueOrThrow({ where: { email }, include: { memberships: true } }); churchId = user.memberships[0].churchId;
+    assert.equal(user.emailVerifiedAt, null);
+    assert.equal((await post('login', { email, password })).status, 403);
+    const original = await emailToken(email, 'VERIFY_EMAIL');
+    const stored = await prisma.authToken.findUniqueOrThrow({ where: { userId_purpose: { userId: user.id, purpose: 'VERIFY_EMAIL' } } });
+    assert.equal(stored.tokenHash, digest(original)); assert.notEqual(stored.tokenHash, original);
+    assert.equal((await post('reset-password', { token: original, password: nextPassword })).status, 422, 'verification token cannot reset a password');
+    assert.equal((await post('verify-email', { token: original }, '', 'https://attacker.example')).status, 403);
+    assert.equal((await post('resend-verification', { email })).status, 200);
+    assert.equal((await post('verify-email', { token: original })).status, 422, 'resend invalidates old link');
+    let verification = await emailToken(email, 'VERIFY_EMAIL');
+    await prisma.authToken.update({ where: { tokenHash: digest(verification) }, data: { expiresAt: new Date(0) } });
+    assert.equal((await post('verify-email', { token: verification })).status, 422);
+    await post('resend-verification', { email }); verification = await emailToken(email, 'VERIFY_EMAIL');
+    const verified = await Promise.all([post('verify-email', { token: verification }), post('verify-email', { token: verification })]);
+    assert.deepEqual(verified.map(r => r.status).sort(), [200, 422]);
+    assert.ok((await prisma.user.findUniqueOrThrow({ where: { email } })).emailVerifiedAt);
+    const login = await post('login', { email, password }); assert.equal(login.status, 200);
+    const cookie = login.headers.get('set-cookie')!.split(';')[0];
+    const absent = await post('forgot-password', { email: `absent-${email}` });
+    const requested = await post('forgot-password', { email });
+    assert.equal(requested.status, absent.status); assert.deepEqual(await requested.json(), await absent.json());
+    const reset = await emailToken(email, 'RESET_PASSWORD');
+    assert.equal((await post('verify-email', { token: reset })).status, 422, 'recovery token cannot verify email');
+    assert.equal((await post('reset-password', { token: reset, password: 'short' })).status, 422);
+    await prisma.authToken.update({ where: { tokenHash: digest(reset) }, data: { expiresAt: new Date(0) } });
+    assert.equal((await post('reset-password', { token: reset, password: nextPassword })).status, 422);
+    await post('forgot-password', { email }); const fresh = await emailToken(email, 'RESET_PASSWORD');
+    const results = await Promise.all([post('reset-password', { token: fresh, password: nextPassword }), post('reset-password', { token: fresh, password: nextPassword })]);
+    assert.deepEqual(results.map(r => r.status).sort(), [200, 422]);
+    assert.equal((await fetch(`${base}/api/songs`, { headers: { Cookie: cookie } })).status, 401);
+    assert.equal((await post('login', { email, password })).status, 401);
+    const newLogin = await post('login', { email, password: nextPassword }); assert.equal(newLogin.status, 200);
+    await post('forgot-password', { email });
+    const pending = await emailToken(email, 'RESET_PASSWORD');
+    assert.equal((await post('password', { current: nextPassword, password }, newLogin.headers.get('set-cookie')!.split(';')[0])).status, 200);
+    assert.equal((await post('reset-password', { token: pending, password: nextPassword })).status, 422, 'authenticated password changes invalidate recovery links');
+    assert.equal((await post('forgot-password', { email })).status, 429, 'mail requests are rate limited');
+    console.log('Email authentication validated: confirmation, expiry, replay, purpose isolation, recovery and session revocation.');
+  } finally {
+    await prisma.user.deleteMany({ where: { email } });
+    if (churchId) await prisma.church.deleteMany({ where: { id: churchId } });
+    await clearTestMail(email); await prisma.$disconnect();
+  }
+});

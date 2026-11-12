@@ -34,7 +34,7 @@ export function Timeline({ document, clock, selectedId, onSelect, onSeek, onChan
     }
     drag.current = null; setDraft(null);
   }
-  return <section className="card space-y-3 min-w-0"><div className="flex items-center justify-between gap-4 flex-wrap"><h2 className="font-bold">Timeline</h2>
+  return <section className="card studio-timeline space-y-3 min-w-0"><div className="flex items-center justify-between gap-4 flex-wrap"><h2 className="font-bold">Timeline</h2>
     <label className="flex items-center gap-2 text-sm">Zoom<input className="!w-32" type="range" min={20} max={180} step={10} value={zoom} onChange={event => setZoom(Number(event.target.value))} /></label></div>
     <PlaybackControls clock={clock} durationMs={document.durationMs} onSeek={onSeek} />
     <div className="overflow-x-auto pb-3"><div className="relative h-36" style={{ width }}>
@@ -42,7 +42,7 @@ export function Timeline({ document, clock, selectedId, onSelect, onSeek, onChan
         {Array.from({ length: Math.ceil(document.durationMs / step) }, (_, index) => <span key={index} className="absolute text-xs text-slate-400 border-l border-slate-700 pl-1 h-full" style={{ left: index * step / document.durationMs * width }}>{index * step / 1000}s</span>)}
       </div>
       <div className="relative h-20 bg-slate-950/40 mt-2">
-        {document.clips.map((original, index) => { const clip = draft?.id === original.id ? draft : original; return <div key={clip.id} role="button" tabIndex={0} aria-label={`${clip.text}, ${(clip.startMs / 1000).toFixed(1)} a ${(clip.endMs / 1000).toFixed(1)} segundos`}
+        {document.clips.map((original, index) => { const clip = draft?.id === original.id ? draft : original; return <div key={clip.id} role="button" aria-pressed={selectedId === clip.id} tabIndex={0} aria-label={`${clip.text}, ${(clip.startMs / 1000).toFixed(1)} a ${(clip.endMs / 1000).toFixed(1)} segundos`}
           className={`absolute top-2 h-16 rounded-lg border select-none touch-none cursor-grab overflow-hidden ${selectedId === clip.id ? 'border-white bg-indigo-600' : 'border-indigo-400/50 bg-indigo-900'}`}
           style={{ left: clip.startMs / document.durationMs * width, width: Math.max(4, (clip.endMs - clip.startMs) / document.durationMs * width) }}
           onPointerDown={event => begin(event, clip, index)} onPointerMove={move} onPointerUp={end} onPointerCancel={() => { drag.current = null; setDraft(null); }}

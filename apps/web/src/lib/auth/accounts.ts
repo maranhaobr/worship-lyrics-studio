@@ -3,9 +3,12 @@ import { z } from 'zod';
 import { ApiError } from '../api-errors';
 import { dummyHash, digest, hashPassword, verifyPassword } from './crypto';
 import { createSession, destroySession, rateLimit } from './session';
-export const emailSchema = z.string().trim().email().max(254).transform(value => value.toLowerCase());
+import { emailSchema, passwordSchema } from './input';
+import { sendEmailToken } from './email-actions';
+import { mailConfig } from './mail';
+export { emailSchema } from './input';
 const credentials = z.object({ email: emailSchema, password: z.string().min(1).max(128), invitation: z.string().regex(/^[\w-]{43}$/).optional() });
-const registerSchema = credentials.extend({ password: z.string().min(12, 'Use uma senha com pelo menos 12 caracteres').max(128), name: z.string().trim().min(2).max(100), churchName: z.string().trim().max(150).optional() });
+const registerSchema = credentials.extend({ password: passwordSchema, name: z.string().trim().min(2).max(100), churchName: z.string().trim().max(150).optional() });
 
 export async function joinInvitation(tx: Prisma.TransactionClient, raw: string, userId: string, email: string) {
   await tx.$queryRaw`SELECT id FROM "Invitation" WHERE "tokenHash"=${digest(raw)} FOR UPDATE`;
@@ -20,6 +23,7 @@ export async function register(body: unknown) {
   const input = registerSchema.parse(body);
   if (!input.invitation && !input.churchName?.trim()) throw new ApiError(422, 'Informe o nome da igreja');
   await rateLimit('register:global', 100); await rateLimit(`register:${input.email}`, 5);
+  mailConfig();
   const passwordHash = await hashPassword(input.password);
   try {
     const account = await prisma.$transaction(async tx => {
@@ -28,7 +32,7 @@ export async function register(body: unknown) {
       const church = await tx.church.create({ data: { name: input.churchName!, memberships: { create: { userId: user.id, role: 'OWNER' } } } });
       return { userId: user.id, churchId: church.id };
     });
-    await destroySession(); await createSession(account.userId, account.churchId);
+    await sendEmailToken(account.userId, 'VERIFY_EMAIL');
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new ApiError(409, 'Não foi possível cadastrar com esse e-mail. Tente entrar ou use outro endereço.');
     throw error;
@@ -40,8 +44,9 @@ export async function login(body: unknown) {
   const user = await prisma.user.findUnique({ where: { email: input.email }, include: { memberships: { orderBy: { createdAt: 'asc' }, take: 1 } } });
   const valid = await verifyPassword(input.password, user?.passwordHash ?? dummyHash);
   if (!user || !valid) throw new ApiError(401, 'E-mail ou senha incorretos');
+  if (!user.emailVerifiedAt) throw new ApiError(403, 'Confirme seu e-mail antes de entrar. Você pode solicitar um novo link de confirmação.');
   let churchId = user.memberships[0]?.churchId;
   if (input.invitation) churchId = await prisma.$transaction(tx => joinInvitation(tx, input.invitation!, user.id, user.email));
   if (!churchId) throw new ApiError(403, 'Sua conta não possui vínculo com uma igreja. Solicite um novo convite.');
-  await destroySession(); await createSession(user.id, churchId);
+  await destroySession(); await createSession(user.id, churchId, user.passwordHash);
 }

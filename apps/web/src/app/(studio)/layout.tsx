@@ -3,6 +3,7 @@ import { prisma } from '@wls/database';
 import { currentActor } from '@/lib/auth/session';
 import { PermissionsProvider } from '@/components/permissions-provider';
 import { AppShell } from '@/components/app-shell';
+import '../studio.css';
 export default async function StudioLayout({ children }: { children: React.ReactNode }) {
   const actor = await currentActor(); if (!actor) redirect('/login');
   const memberships = await prisma.membership.findMany({ where: { userId: actor.user.id }, select: { church: { select: { id: true, name: true } } } });

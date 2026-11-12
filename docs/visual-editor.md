@@ -1,5 +1,11 @@
 # Editor Visual 2.0
 
+## Resolução de saída
+
+Em **Exportar e arquivo → Resolução do vídeo**, escolha projetor XGA 4:3, HD, Full HD (padrão), QHD, 4K UHD, vertical 9:16, quadrado ou retrato 4:5. Em **Personalizado**, informe largura e altura e clique em **Aplicar resolução**. O preview e o MP4 usam as mesmas dimensões; salve o projeto para mantê-las. Desfazer/refazer também inclui mudanças de resolução.
+
+Dimensões devem ser pares, entre 256 e 4096 px, com no máximo 8.294.400 pixels no total, para compatibilidade com H.264. A tipografia acompanha a escala da saída; mudanças de proporção podem alterar as quebras de linha. O MP4 continua sem áudio.
+
 ## Executar
 
 ```sh
@@ -103,3 +109,11 @@ Com o servidor local disponível, execute `npm run test:integration` para verifi
 O cliente Prisma é gerado em `packages/database/generated/client`. `NEXT_DIST_DIR` permite usar um diretório de build separado do servidor de desenvolvimento, por exemplo `.next-build`.
 
 As dependências Remotion estão fixadas na mesma versão. A auditoria de dependências também aponta problemas herdados na stack Next 15/Prisma 6/Zod 3. A atualização dessas versões principais deve ser tratada separadamente, com testes de migração.
+
+## Interface do Studio
+
+A área interna usa o layout compartilhado `AppShell` e os estilos isolados de `studio.css`. O dashboard mostra contagens e os três projetos mais recentes da igreja ativa; as prévias usam o componente reutilizável `ProjectCard`, também usado na listagem de projetos. Os atalhos de criação seguem as permissões do usuário.
+
+No desktop, o editor ocupa a altura disponível da janela, com preview estável e rolagem independente nas ferramentas e no inspetor. As abas têm ícones, navegação por setas, Home e End; o menu lateral pode ser recolhido e a preferência é mantida. No celular, o menu da conta fica no avatar do cabeçalho, incluindo troca de igreja e logout. Animações de interface respeitam a preferência por movimento reduzido.
+
+Verificação visual adicional: `npx tsx --env-file=.env tests/studio-browser.ts` com o servidor local em execução e `REMOTION_BROWSER_EXECUTABLE` apontando para o Chrome. Os testes criam apenas dados sintéticos e os removem ao terminar.

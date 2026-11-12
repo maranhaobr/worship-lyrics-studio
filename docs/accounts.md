@@ -44,7 +44,37 @@ Abra **Igreja e equipe** para gerar convites por e-mail e perfil, alterar funç�
 - Todas as operações de dados usam a igreja da sessão, nunca uma igreja escolhida no corpo do pedido. IDs de outro tenant não dão acesso a músicas, projetos, templates, mídias, alinhamentos ou renders. A mídia privada também exige sessão e não é enviada a caches públicos.
 - Rotas e serviços validam acesso no servidor; controles da interface apenas complementam essa proteção. Consultas diretas ao banco por operadores/worker são privilegiadas e não passam pelo login da aplicação. O isolamento é implementado pela aplicação, sem PostgreSQL RLS nesta fase.
 
-Ainda não fazem parte desta etapa: confirmação de e-mail, recuperação de senha por e-mail, MFA, SSO, cobrança ou quotas de assinatura. Não apresente o e-mail cadastrado como verificado; o convite prova posse do link compartilhado. Para recuperar uma conta, não exponha rotas administrativas sem autenticação: configure um serviço de e-mail antes de implementar recuperação pública.
+## Confirmação de e-mail e recuperação de senha
+
+Novos cadastros, inclusive por convite, precisam confirmar o e-mail antes do login. O cadastro não cria uma sessão. Em `/verify-email`, é possível reenviar a confirmação; o link expira em 24 horas. O clique no e-mail abre a tela e a confirmação exige uma ação explícita, para que verificadores automáticos de links não consumam o token.
+
+Em `/login`, **Esqueci minha senha** abre `/forgot-password`. O link de recuperação expira em 30 minutos. A nova senha deve ter de 12 a 128 caracteres, e a redefinição revoga todas as sessões. Não há login automático após a redefinição. A alteração de senha pela tela da equipe também invalida links pendentes de recuperação.
+
+Os tokens têm 256 bits aleatórios e ficam no banco apenas como hash, separados por finalidade. Reenviar invalida o link anterior; consumo e alteração de senha são atômicos, inclusive em requisições simultâneas. Tokens são enviados no fragmento do link e removidos da barra de endereços após a leitura, para não aparecerem nos logs HTTP. Reenvio e recuperação respondem com a mesma mensagem para endereços existentes e ausentes, com limites por endereço e globais. Falhas SMTP não retornam dados da conta nem detalhes do provedor; verifique o diagnóstico genérico no servidor e tente reenviar após corrigir o serviço.
+
+A migração `20261112120000_email_verification_recovery` preserva o acesso das contas preexistentes preenchendo `emailVerifiedAt` na data da migração. Para essas contas, esse valor representa a dispensa inicial da confirmação, não uma comprovação histórica da posse do e-mail. Os novos usuários começam sem esse valor. Músicas, igrejas e permissões são preservadas.
+
+### Envio local e SMTP
+
+Sem configuração, em desenvolvimento as mensagens são gravadas em `.data/mail/*.json` (não são enviadas). Abra o arquivo local para testar o link. O diretório é ignorado pelo Git e não é servido pela aplicação; contém links secretos temporários. Não compartilhe esses arquivos. Os testes usam apenas contas sintéticas e apagam suas mensagens ao terminar. Os testes de integração exigem o servidor em `MAIL_TRANSPORT=file`.
+
+Para entregar e-mails reais, configure no ambiente do servidor e reinicie-o:
+
+```dotenv
+APP_ORIGIN=https://studio.seudominio.com.br
+MAIL_TRANSPORT=smtp
+MAIL_FROM="Worship Lyrics Studio <nao-responda@seudominio.com.br>"
+SMTP_HOST=smtp.seuprovedor.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=seu-usuario
+SMTP_PASSWORD=configure-no-ambiente
+SMTP_REQUIRE_TLS=true
+```
+
+Use um remetente autorizado pelo provedor e configure SPF/DKIM/DMARC conforme as instruções dele. A porta 465 usa TLS desde a conexão; a 587 usa STARTTLS. A produção exige SMTP e uma origem HTTPS canônica; não permite o transporte de arquivos nem desativar a exigência de TLS. Não há desativação da validação de certificados. Em SMTP local de testes, `SMTP_REQUIRE_TLS=false` é permitido somente fora de produção. Não use credenciais reais nos testes.
+
+No cadastro, o servidor tenta enviar antes de responder. No reenvio e na recuperação, a entrega acontece após a resposta usando `after` do Next.js, para que o tempo de resposta não dependa do SMTP. Não há fila durável ou retentativa automática nesta etapa; o deploy precisa suportar o ciclo de vida `after` (servidor Node/Docker ou adaptador compatível). Após falha de entrega, o usuário pode solicitar um novo link. Mantenha retenção operacional para excluir tokens expirados. MFA, SSO, cobrança e quotas de assinatura continuam fora desta etapa.
 
 ## Verificação
 
@@ -54,7 +84,10 @@ npm exec -w @wls/database -- prisma migrate deploy
 npm run typecheck
 npm test
 npm run test:accounts
+npm run test:email-auth
 npm run test:integration
 ```
 
 Os testes de contas verificam duas igrejas isoladas, mídias privadas, papéis, convites, troca de igreja, revogação, CSRF, alteração de senha e remoção simultânea de responsáveis. Os testes anteriores agora usam contas sintéticas temporárias. Fixtures e registros de teste são removidos ao terminar. Não há senha padrão nem bypass de login para testes.
+
+Referências: [recuperação de senha OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html), [SMTP do Nodemailer](https://nodemailer.com/smtp) e [after do Next.js](https://nextjs.org/docs/app/api-reference/functions/after).

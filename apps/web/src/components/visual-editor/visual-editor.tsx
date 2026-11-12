@@ -1,6 +1,8 @@
 'use client';
 import { usePermission } from '@/components/permissions-provider';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { ResolutionPanel } from './resolution-panel';
+import { ArrowLeft, AudioLines, Check, Circle, Download, Film, Image, LayoutTemplate, MonitorPlay, Palette, Redo2, Save, ShieldCheck, SlidersHorizontal, Sparkles, Type, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import type { PlayerRef } from '@remotion/player';
 import { distributeWords, durationInFrames, msToFrame, projectFromSong, resolveClipStyle, type MediaView, type ProjectView, type SongInput, type TemplatePreset, type VisualStyle } from '@wls/shared';
@@ -20,8 +22,8 @@ import { AlignmentPanel } from './alignment-panel';
 import { EditorTabs } from './editor-tabs';
 import { ProPresenterExportButton } from '@/components/propresenter-export-button';
 
-const inspectorTabs = [{ id: 'templates', label: 'Templates' }, { id: 'background', label: 'Fundo' }, { id: 'theme', label: 'Tema' }, { id: 'text', label: 'Texto' }, { id: 'animation', label: 'Animação' }] as const;
-const workspaceTabs = [{ id: 'timeline', label: 'Slides e timeline' }, { id: 'audio', label: 'Áudio e sincronização' }, { id: 'export', label: 'Exportar e arquivo' }] as const;
+const inspectorTabs = [{ id: 'templates', label: 'Templates', icon: LayoutTemplate }, { id: 'background', label: 'Fundo', icon: Image }, { id: 'theme', label: 'Tema', icon: Palette }, { id: 'text', label: 'Texto', icon: Type }, { id: 'animation', label: 'Animação', icon: Sparkles }] as const;
+const workspaceTabs = [{ id: 'timeline', label: 'Slides e timeline', icon: Film }, { id: 'audio', label: 'Áudio e sincronização', icon: AudioLines }, { id: 'export', label: 'Exportar e arquivo', icon: Download }] as const;
 
 export default function VisualEditor({ project, initialTemplates, initialAssets, sourceSong, autoExport = false }: { project: ProjectView; initialTemplates: TemplatePreset[]; initialAssets: MediaView[]; sourceSong: SongInput | null; autoExport?: boolean }) {
   const canEdit=usePermission('edit');
@@ -73,14 +75,14 @@ export default function VisualEditor({ project, initialTemplates, initialAssets,
     const url = URL.createObjectURL(blob); const link = window.document.createElement('a'); link.href = url; link.download = `worship-${project.id}.json`; link.click(); URL.revokeObjectURL(url);
   }
   return <div className="editor-workspace min-w-0 flex flex-col gap-3">
-    <header className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-x-4 gap-y-2 min-w-0">
-      <div className="flex-1 min-w-0"><div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400"><Link href="/visual-projects" className="hover:text-white">← Projetos visuais</Link><h1 className="text-xs">Editor Visual 2.0</h1><p>{editor.dirty ? 'Alterações não salvas' : 'Projeto salvo'} · revisão {editor.revision}</p></div>
+    <header className="studio-editor-header flex items-center justify-between flex-wrap sm:flex-nowrap gap-x-4 gap-y-2 min-w-0">
+      <div className="flex-1 min-w-0"><div className="studio-editor-breadcrumb flex items-center flex-wrap"><Link href="/visual-projects"><ArrowLeft size={12} />Projetos visuais</Link><span aria-hidden="true">/</span><h1>Editor Visual 2.0</h1><p className="studio-editor-save-state" data-dirty={editor.dirty}>{editor.dirty ? <Circle /> : <Check />}{editor.dirty ? 'Alterações não salvas' : 'Projeto salvo'} · revisão {editor.revision}</p></div>
         <label className="block mt-1 max-w-xl"><span className="sr-only">Nome do projeto</span><input className="!py-1.5 !px-2 text-base font-semibold !bg-transparent !border-transparent hover:!border-slate-700 focus:!border-accent" value={editor.name} maxLength={200} disabled={editingLocked} onChange={event => editor.setName(event.target.value)} /></label>
       </div>
-      <div className="flex gap-2 shrink-0"><button className="btn-secondary !py-2 !px-3 text-sm" disabled={editingLocked || !editor.canUndo} onClick={editor.undo}>Desfazer</button><button className="btn-secondary !py-2 !px-3 text-sm" disabled={editingLocked || !editor.canRedo} onClick={editor.redo}>Refazer</button><button className="btn !py-2 !px-3 text-sm" disabled={editingLocked || !editor.dirty} onClick={editor.save}>{editor.saving ? 'Salvando...' : 'Salvar projeto'}</button></div>
+      <div className="flex items-center gap-3 shrink-0"><div className="studio-editor-history"><button className="btn-secondary" aria-label="Desfazer" title="Desfazer" disabled={editingLocked || !editor.canUndo} onClick={editor.undo}><Undo2 /><span>Desfazer</span></button><button className="btn-secondary" aria-label="Refazer" title="Refazer" disabled={editingLocked || !editor.canRedo} onClick={editor.redo}><Redo2 /><span>Refazer</span></button></div><button className="btn !py-2 !px-3" disabled={editingLocked || !editor.dirty} onClick={editor.save}><Save size={14} />{editor.saving ? 'Salvando...' : 'Salvar projeto'}</button></div>
     </header>
     <div className="editor-columns grid lg:grid-cols-[minmax(0,1fr)_340px] gap-4 min-h-0 flex-1">
-      <div className="flex flex-col gap-3 min-w-0 min-h-0"><div data-editor-preview className="editor-preview shrink-0 w-full mx-auto"><PreviewPlayer document={document} assets={assets} playerRef={playerRef} onFrame={clock.reportFrame} /></div>
+      <div className="flex flex-col gap-3 min-w-0 min-h-0"><div className="studio-preview-stage"><div className="studio-preview-stage-caption"><span><MonitorPlay size={12} /> PREVIEW DO VÍDEO</span><span><i />{document.width} × {document.height} · {document.fps} fps</span></div><div data-editor-preview className="editor-preview shrink-0 w-full mx-auto" style={{ '--preview-ratio': document.width / document.height } as CSSProperties}><PreviewPlayer document={document} assets={assets} playerRef={playerRef} onFrame={clock.reportFrame} /></div></div>
         <EditorTabs id="workspace" label="Ferramentas do projeto" tabs={workspaceTabs} value={workspaceTab} onChange={setWorkspaceTab} />
         <div ref={workspaceScroll} data-workspace-scroll className="editor-scroll min-h-0 min-w-0 flex-1 space-y-3">
         <div hidden={workspaceTab !== 'audio'} role="tabpanel" id="workspace-panel-audio" aria-labelledby="workspace-tab-audio">
@@ -97,15 +99,16 @@ export default function VisualEditor({ project, initialTemplates, initialAssets,
           {selected && <ClipPanel key={JSON.stringify(selected)} clip={selected} onError={editor.setError} onSave={clip => change({ ...document, clips: document.clips.map(item => item.id === clip.id ? clip : item) })} onRepeat={() => append(true)} onDelete={() => { if (change({ ...document, clips: document.clips.filter(item => item.id !== selected.id) })) setSelectedId(null); }} />}
         </fieldset></div>
         <div hidden={workspaceTab !== 'export'} role="tabpanel" id="workspace-panel-export" aria-labelledby="workspace-tab-export" className="space-y-3">
+        <ResolutionPanel key={`${document.width}x${document.height}`} size={document} disabled={editingLocked} onChange={size => change(current => ({ ...current, ...size }))} />
         <ExportPanel projectId={project.id} document={document} autoExport={autoExport} />
         <section className="card space-y-3"><h2 className="font-bold">ProPresenter</h2><p className="text-sm text-slate-400">Exporte os slides atuais como letras editáveis e grupos. O arquivo .pro usa um visual básico; fundos, efeitos e tempos sincronizados não são transferidos. Para reproduzir o visual completo no ProPresenter, use o MP4.</p><ProPresenterExportButton projectId={project.id} document={document} /></section>
         <details className="card"><summary className="cursor-pointer text-sm">Arquivo do projeto</summary><button className="btn-secondary mt-3" onClick={download}>Baixar projeto editável (JSON)</button></details>
-        {sourceSong && <section className="card space-y-3"><h2 className="font-bold">Letra de origem</h2><p className="text-sm text-slate-400">O projeto tem uma cópia independente da letra. Reimportar substitui todos os blocos e tempos pela versão da música carregada nesta página.</p><button disabled={editingLocked} className="btn-secondary" onClick={() => { if (confirm('Substituir todos os blocos e tempos pela letra de origem? Esta ação pode ser desfeita.')) { const next = projectFromSong(sourceSong, () => crypto.randomUUID()); if (change({ ...next, style: document.style })) { setSelectedId(null); seek(0); } } }}>Reimportar letra</button></section>}
+        {sourceSong && <section className="card space-y-3"><h2 className="font-bold">Letra de origem</h2><p className="text-sm text-slate-400">O projeto tem uma cópia independente da letra. Reimportar substitui todos os blocos e tempos pela versão da música carregada nesta página.</p><button disabled={editingLocked} className="btn-secondary" onClick={() => { if (confirm('Substituir todos os blocos e tempos pela letra de origem? Esta ação pode ser desfeita.')) { const next = projectFromSong(sourceSong, () => crypto.randomUUID()); if (change({ ...next, width: document.width, height: document.height, style: document.style })) { setSelectedId(null); seek(0); } } }}>Reimportar letra</button></section>}
         </div></div>
       </div>
-      <div className="flex flex-col gap-3 min-h-0 min-w-0"><EditorTabs id="inspector" label="Configurações visuais" tabs={inspectorTabs} value={inspectorTab} onChange={setInspectorTab} />
+      <div className="studio-inspector flex flex-col gap-2 min-h-0 min-w-0"><div className="studio-inspector-label"><SlidersHorizontal size={14} />Personalizar visual</div><EditorTabs id="inspector" label="Configurações visuais" tabs={inspectorTabs} value={inspectorTab} onChange={setInspectorTab} />
       <div ref={inspectorScroll} data-inspector-scroll className="editor-scroll min-h-0 flex-1"><fieldset disabled={editingLocked} className="space-y-3 min-w-0">
-        <section className="card space-y-3"><label><span className="label">Aplicar alterações a</span><select value={selected ? styleScope : 'video'} onChange={event => setStyleScope(event.target.value as 'video' | 'slide')}><option value="video">Visual padrão do vídeo</option><option value="slide" disabled={!selected}>Slide {selected ? document.clips.indexOf(selected) + 1 : ''} selecionado</option></select></label>
+        <section className="card studio-scope space-y-3"><label><span className="label">Aplicar alterações a</span><select value={selected ? styleScope : 'video'} onChange={event => setStyleScope(event.target.value as 'video' | 'slide')}><option value="video">Visual padrão do vídeo</option><option value="slide" disabled={!selected}>Slide {selected ? document.clips.indexOf(selected) + 1 : ''} selecionado</option></select></label>
           <p className="text-xs text-slate-400">{targetId ? 'Fundo, texto e efeito serão alterados apenas neste slide.' : 'Slides com visual próprio mantêm suas personalizações.'}</p>
           {targetId && selected?.style && <button className="btn-secondary text-sm" onClick={() => change(current => ({ ...current, clips: current.clips.map(clip => clip.id === targetId ? { ...clip, style: undefined } : clip) }))}>Usar visual padrão neste slide</button>}
         </section>
@@ -116,5 +119,6 @@ export default function VisualEditor({ project, initialTemplates, initialAssets,
         <div hidden={inspectorTab !== 'animation'} role="tabpanel" id="inspector-panel-animation" aria-labelledby="inspector-tab-animation"><AnimationPanel style={activeStyle} onChange={styleChanged} /></div>
       </fieldset></div></div>
     </div>
+    <div className="studio-editor-footer"><span><ShieldCheck />Espaço privado da sua igreja</span><span>{document.clips.length} slides · {Math.floor(document.durationMs / 60000)}:{String(Math.floor(document.durationMs / 1000) % 60).padStart(2, '0')} de duração · MP4 sem áudio</span></div>
   </div>;
 }

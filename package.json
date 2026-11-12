@@ -23,6 +23,7 @@
     "render:video": "tsx tools/render-video.ts",
     "alignment:up": "tsx tools/start-alignment.ts",
     "test:accounts": "tsx --env-file=.env --test tests/accounts.integration.ts",
+    "test:email-auth": "tsx --env-file=.env --test tests/email-auth.integration.ts",
     "accounts:claim-legacy": "tsx --env-file=.env tools/claim-legacy.ts",
     "accounts:invite-owner": "tsx --env-file=.env tools/invite-owner.ts"
   },

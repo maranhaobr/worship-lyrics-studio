@@ -27,7 +27,7 @@ export function PreviewPlayer({ document, assets, onFrame, playerRef }: {
   }, [playerRef]);
   return <div className="overflow-hidden rounded-xl border border-slate-700 bg-black">
     <Player ref={playerRef} component={PreviewComposition} inputProps={props} durationInFrames={durationInFrames(document)}
-      fps={document.fps} compositionWidth={document.width} compositionHeight={document.height} controls showVolumeControls={Boolean(document.referenceAudio)} style={{ width: '100%', aspectRatio: '16 / 9' }}
+      fps={document.fps} compositionWidth={document.width} compositionHeight={document.height} controls showVolumeControls={Boolean(document.referenceAudio)} style={{ width: '100%', aspectRatio: `${document.width} / ${document.height}` }}
       errorFallback={({ error }) => <div role="alert" className="p-6 text-red-200">Não foi possível carregar o preview: {error.message}</div>} />
   </div>;
 }

@@ -1,15 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomBytes } from 'node:crypto';
+import { clearTestMail, verifyTestEmail } from './email-helper';
 import { prisma } from '@wls/database';
 import type { VisualProjectDocument } from '@wls/shared';
 const base = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 const origin = new URL(base).origin;
 class Client {
   cookie = '';
-  async request(path: string, method = 'GET', body?: object | FormData, externalOrigin = origin) {
+  cookieHeader = '';
+  async request(path: string, method = 'GET', body?: object | FormData, externalOrigin = origin): Promise<Response> {
     const response = await fetch(base + path, { method, headers: { ...(this.cookie ? { Cookie: this.cookie } : {}), ...(method !== 'GET' ? { Origin: externalOrigin } : {}), ...(body instanceof FormData || !body ? {} : { 'Content-Type': 'application/json' }) }, body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined });
-    const cookie = response.headers.get('set-cookie'); if (cookie) this.cookie = cookie.split(';')[0];
+    const cookie = response.headers.get('set-cookie'); if (cookie) { this.cookieHeader = cookie; this.cookie = cookie.split(';')[0]; }
+    if (path === '/api/auth/register' && response.status === 201) {
+      const credentials = body as { email: string; password: string };
+      await verifyTestEmail(credentials.email);
+      assert.equal((await this.request('/api/auth/login', 'POST', { email: credentials.email, password: credentials.password })).status, 200);
+    }
     return response;
   }
 }
@@ -25,7 +32,7 @@ test('church isolation, role hierarchy, invitations, sessions and last-owner pro
     for (const [client, i] of [[a, 0], [b, 1]] as const) {
       const response = await client.request('/api/auth/register', 'POST', { email: emails[i], password, name: `Pessoa ${i}`, churchName: `Igreja ${prefix}-${i}` });
       assert.equal(response.status, 201, await response.clone().text());
-      assert.match(response.headers.get('set-cookie') ?? '', /HttpOnly/i);
+      assert.match(client.cookieHeader, /HttpOnly/i);
       const church = await (await client.request('/api/church')).json(); churches.push(church.church.id);
       assert.deepEqual(await (await client.request('/api/songs')).json(), [], 'registration cannot claim the legacy archive');
     }
@@ -109,6 +116,7 @@ test('church isolation, role hierarchy, invitations, sessions and last-owner pro
       await prisma.church.deleteMany({ where: { id: churchId } });
     }
     await prisma.user.deleteMany({ where: { id: { in: users.map(u => u.id) } } });
+    for (const email of emails) await clearTestMail(email);
     await prisma.$disconnect();
   }
 });

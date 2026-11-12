@@ -137,9 +137,28 @@ model User {
   email String @unique
   name String
   passwordHash String
+  emailVerifiedAt DateTime?
   createdAt DateTime @default(now())
   memberships Membership[]
   sessions Session[]
+  authTokens AuthToken[]
+}
+
+enum AuthTokenPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+model AuthToken {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose AuthTokenPurpose
+  tokenHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@unique([userId, purpose])
+  @@index([expiresAt])
 }
 
 model Church {
