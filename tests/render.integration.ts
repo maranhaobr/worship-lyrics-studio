@@ -27,7 +27,7 @@ test('renders gradient, image and looping video backgrounds without an audio tra
       await renderMedia({ serveUrl, composition, inputProps, outputLocation, codec: 'h264', pixelFormat: 'yuv420p', muted: true, concurrency: 2, browserExecutable });
       const probe = await ff('ffprobe', ['-v', 'error', '-show_streams', '-of', 'json', outputLocation]);
       const streams = (JSON.parse(probe.stdout) as { streams: { codec_type: string; width?: number; height?: number }[] }).streams;
-      assert.equal(streams.length, 1); assert.equal(streams[0].codec_type, 'video'); assert.equal(streams[0].width, 1920); assert.equal(streams[0].height, 1080);
+      assert.equal(streams.length, 1); assert.equal(streams[0].codec_type, 'video'); assert.equal(streams[0].width, inputProps.document.width); assert.equal(streams[0].height, inputProps.document.height);
     }
     await render({ document, media: {} }, `${prefix}-gradient.mp4`);
     // A PCM WAV fixture avoids depending on optional FFmpeg source filters.
@@ -64,13 +64,14 @@ test('renders gradient, image and looping video backgrounds without an audio tra
       { ...document.clips[0], id: 'first', startMs: 0, endMs: 500, words: distributeWords(document.clips[0].text, 500), style: { background: { type: 'video', assetId: video.id }, animation: { type: 'slide', durationMs: 100 } } },
       { ...document.clips[0], id: 'second', startMs: 500, endMs: 1000, words: distributeWords(document.clips[0].text, 500), style: { background: { type: 'image', assetId: image.id }, animation: { type: 'zoom', durationMs: 100 } } },
     ];
+    document.width = 480; document.height = 854;
     const exported = await fetch(`${base}/api/visual-projects/${projectId}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(document) });
     assert.equal(exported.status, 200, await exported.clone().text().then(text => text.slice(0, 200)));
     assert.equal(exported.headers.get('content-type'), 'video/mp4');
     const exportPath = `${prefix}-slides.mp4`; await writeFile(exportPath, Buffer.from(await exported.arrayBuffer()));
     const probe = await ff('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,width,height', '-of', 'json', exportPath]);
     const streams = (JSON.parse(probe.stdout) as { streams: { codec_type: string; width: number; height: number }[] }).streams;
-    assert.equal(streams.length, 1); assert.equal(streams[0].codec_type, 'video'); assert.equal(streams[0].width, 1920);
+    assert.equal(streams.length, 1); assert.equal(streams[0].codec_type, 'video'); assert.equal(streams[0].width, 480); assert.equal(streams[0].height, 854);
     await ff('ffmpeg', ['-ss', '0.25', '-i', exportPath, '-frames:v', '1', `${prefix}-first.png`]);
     await ff('ffmpeg', ['-ss', '0.75', '-i', exportPath, '-frames:v', '1', `${prefix}-second.png`]);
   } finally {

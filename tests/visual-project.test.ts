@@ -7,6 +7,23 @@ const song: SongInput = { title: 'Teste', sections: [{ type: 'VERSE', label: 'Ve
 let counter = 0;
 const create = () => projectFromSong(song, () => `clip-${++counter}`);
 
+test('output sizes preserve lyrics and reject dimensions incompatible with MP4 or resource limits', async () => {
+  const { resolutionPresets } = await import('../packages/shared/src');
+  const original = create();
+  for (const size of [...resolutionPresets, { width: 1600, height: 900 }]) {
+    const parsed = visualProjectSchema.parse({ ...original, width: size.width, height: size.height });
+    assert.deepEqual(parsed.clips, original.clips);
+    assert.equal(parsed.width, size.width);
+    assert.equal(parsed.height, size.height);
+  }
+  for (const size of [{ width: 1279, height: 720 }, { width: 1920, height: 0 }, { width: 1920.5, height: 1080 }, { width: 5000, height: 1080 }, { width: 4096, height: 4096 }]) {
+    assert.equal(visualProjectSchema.safeParse({ ...original, ...size }).success, false);
+  }
+  const resized = { ...original, width: 1080, height: 1920 };
+  const history = editorReducer({ past: [], present: original, future: [] }, { type: 'change', document: resized });
+  assert.equal(editorReducer(history, { type: 'undo' }).present, original);
+});
+
 test('seasonal and typography templates round-trip all styling without altering lyrics or timing', () => {
   for (const preset of templatePresets) {
     const document = create();

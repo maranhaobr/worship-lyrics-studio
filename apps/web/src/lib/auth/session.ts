@@ -16,7 +16,7 @@ export async function assertOrigin() {
 export async function getSession() {
   const raw = (await cookies()).get(cookieName)?.value;
   if (!raw || !/^[\w-]{43}$/.test(raw)) return null;
-  return prisma.session.findFirst({ where: { tokenHash: digest(raw), expiresAt: { gt: new Date() } }, include: { user: { select: { id: true, name: true, email: true } } } });
+  return prisma.session.findFirst({ where: { tokenHash: digest(raw), expiresAt: { gt: new Date() }, user: { emailVerifiedAt: { not: null } } }, include: { user: { select: { id: true, name: true, email: true } } } });
 }
 export async function currentActor() {
   const session = await getSession();
@@ -31,9 +31,14 @@ export async function requireActor(permission: Permission = 'read') {
   if (permission !== 'read') await assertOrigin();
   return actor;
 }
-export async function createSession(userId: string, churchId: string) {
+export async function createSession(userId: string, churchId: string, expectedPasswordHash?: string) {
   const raw = token(), expiresAt = new Date(Date.now() + 7 * 86400000);
-  await prisma.session.create({ data: { userId, activeChurchId: churchId, tokenHash: digest(raw), expiresAt } });
+  await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM "User" WHERE id=${userId} FOR UPDATE`;
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (!user?.emailVerifiedAt || (expectedPasswordHash && expectedPasswordHash !== user.passwordHash)) throw new ApiError(401, 'Entre novamente na sua conta');
+    await tx.session.create({ data: { userId, activeChurchId: churchId, tokenHash: digest(raw), expiresAt } });
+  });
   (await cookies()).set(cookieName, raw, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', expires: expiresAt });
 }
 export async function destroySession() {

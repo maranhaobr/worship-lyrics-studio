@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { prisma } from '@wls/database';
+import { clearTestMail, verifyTestEmail } from './email-helper';
 import type { openBrowser } from '@remotion/renderer';
 type TestBrowser = Awaited<ReturnType<typeof openBrowser>>;
 type TestPage = Awaited<ReturnType<TestBrowser['newPage']>>;
@@ -11,7 +12,10 @@ export function testAccount() {
     const email = `test-${randomBytes(12).toString('hex')}@example.test`, password = randomBytes(24).toString('base64url');
     const response = await nativeFetch(`${base}/api/auth/register`, { method: 'POST', headers: { Origin: new URL(base).origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, name: 'Teste automático', churchName: 'Igreja de teste automático' }) });
     if (!response.ok) throw new Error(`Cadastro de teste falhou: ${response.status}`);
-    const cookie = response.headers.get('set-cookie')!.split(';')[0];
+    await verifyTestEmail(email);
+    const login = await nativeFetch(`${base}/api/auth/login`, { method: 'POST', headers: { Origin: new URL(base).origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    if (!login.ok) throw new Error(`Login de teste falhou: ${login.status}`);
+    const cookie = login.headers.get('set-cookie')!.split(';')[0];
     const user = await prisma.user.findUniqueOrThrow({ where: { email }, include: { memberships: true } });
     return { email, password, cookie, userId: user.id, churchId: user.memberships[0].churchId };
   })();
@@ -26,6 +30,7 @@ export async function cleanupTestAccount() {
   const credentials = await account;
   await prisma.user.deleteMany({ where: { id: credentials.userId } });
   await prisma.church.deleteMany({ where: { id: credentials.churchId } });
+  await clearTestMail(credentials.email);
   account = undefined;
 }
 export async function browserLogin(page: TestPage) {

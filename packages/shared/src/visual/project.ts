@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { maxVideoPixels, videoDimensionSchema } from './resolution';
 
 const color = z.string().regex(/^#[0-9a-f]{6}$/i, 'Use uma cor hexadecimal');
 const ms = z.number().int().min(0).max(3_600_000);
@@ -28,10 +29,11 @@ export const clipSchema = z.object({
   style: visualStyleSchema.partial().optional(),
 });
 export const visualProjectSchema = z.object({
-  schemaVersion: z.literal(1), width: z.literal(1920), height: z.literal(1080), fps: z.literal(30),
+  schemaVersion: z.literal(1), width: videoDimensionSchema, height: videoDimensionSchema, fps: z.literal(30),
   durationMs: z.number().int().min(100).max(3_600_000), style: visualStyleSchema, clips: z.array(clipSchema).max(10_000),
   referenceAudio: z.object({ assetId: z.string().min(1) }).optional(),
 }).superRefine((project, ctx) => {
+  if (project.width * project.height > maxVideoPixels) ctx.addIssue({ code: 'custom', path: ['width'], message: 'A resolução deve ter no máximo 8.294.400 pixels (4K UHD)' });
   const ids = new Set<string>();
   let previousEnd = 0;
   project.clips.forEach((clip, i) => {

@@ -1,9 +1,11 @@
 'use client';
+import { useTranslation } from '@/components/preferences-provider';
 import { usePermission } from '@/components/permissions-provider';
 import { useEffect, useRef, useState } from 'react';
 import type { VisualProjectDocument } from '@wls/shared';
 import { useToast, useToastFeedback } from '@/components/toast-provider';
 export function ExportPanel({ projectId, document, autoExport }: { projectId: string; document: VisualProjectDocument; autoExport: boolean }) {
+  const t = useTranslation();
   const canEdit=usePermission('edit');
   const [busy, setBusy] = useState(false);
   const { setError, setMessage } = useToastFeedback();
@@ -38,10 +40,10 @@ export function ExportPanel({ projectId, document, autoExport }: { projectId: st
     // Automatic rendering runs once for the initial project, never on edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return <section className="card space-y-3"><h2 className="font-bold">Seu lyric video</h2>
-    <p className="text-sm text-slate-400">Gere o vídeo completo em MP4, Full HD e sem áudio, com todos os slides e suas personalizações.</p>
-    <button className="btn" disabled={busy || !canEdit} onClick={generate}>{busy ? 'Gerando vídeo completo...' : ready ? 'Gerar nova versão' : 'Gerar MP4 completo'}</button>
-    {busy && <p role="status" className="text-sm text-slate-400">Isso pode levar alguns minutos. Mantenha esta página aberta; você pode continuar editando.</p>}
-    {ready && <div className="space-y-2"><a className="btn-secondary inline-block" href={ready.url} download={`worship-${projectId}.mp4`}>Baixar vídeo pronto</a>{ready.document !== document && <p className="text-sm text-amber-200">Você editou o projeto após iniciar a geração. Gere uma nova versão para incluir as alterações.</p>}</div>}
+  return <section className="card space-y-3"><h2 className="font-bold">{t("Seu lyric video")}</h2>
+    <p className="text-sm text-slate-400">{t("Gere o vídeo completo em MP4, ")}{document.width}{t(" × ")}{document.height}{t(" px e sem áudio, com todos os slides e suas personalizações.")}</p>
+    <button className="btn" disabled={busy || !canEdit} onClick={generate}>{busy ? t("Gerando vídeo completo...") : ready ? t("Gerar nova versão") : t("Gerar MP4 completo")}</button>
+    {busy && <p role="status" className="text-sm text-slate-400">{t("Isso pode levar alguns minutos. Mantenha esta página aberta; você pode continuar editando.")}</p>}
+    {ready && <div className="space-y-2"><a className="btn-secondary inline-block" href={ready.url} download={`worship-${projectId}.mp4`}>{t("Baixar vídeo pronto")}</a>{ready.document !== document && <p className="text-sm text-amber-200">{t("Você editou o projeto após iniciar a geração. Gere uma nova versão para incluir as alterações.")}</p>}</div>}
   </section>;
 }

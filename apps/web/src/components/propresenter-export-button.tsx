@@ -1,10 +1,12 @@
 'use client';
+import { useTranslation } from '@/components/preferences-provider';
 import { useState } from 'react';
 import type { VisualProjectDocument } from '@wls/shared';
 import { useToast } from './toast-provider';
 import { usePermission } from './permissions-provider';
 
 export function ProPresenterExportButton({ songId, projectId, document }: { songId?: string; projectId?: string; document?: VisualProjectDocument }) {
+  const t = useTranslation();
   const [busy, setBusy] = useState(false);
   const notify = useToast();
   const canEdit = usePermission('edit');
@@ -21,5 +23,5 @@ export function ProPresenterExportButton({ songId, projectId, document }: { song
     } catch (error) { notify(error instanceof Error ? error.message : 'Não foi possível exportar', 'error'); }
     finally { setBusy(false); }
   }
-  return <button type="button" className="btn-secondary" disabled={busy || (Boolean(projectId) && !canEdit)} onClick={() => void download()}>{busy ? 'Exportando...' : 'Exportar para ProPresenter (.pro)'}</button>;
+  return <button type="button" className="btn-secondary" disabled={busy || (Boolean(projectId) && !canEdit)} onClick={() => void download()}>{busy ? t("Exportando...") : t("Exportar para ProPresenter (.pro)")}</button>;
 }

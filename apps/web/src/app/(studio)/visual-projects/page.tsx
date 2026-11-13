@@ -1,12 +1,18 @@
+import { getTranslator } from '@/lib/i18n/server';
 import { requireActor } from '@/lib/auth/session';
 import Link from 'next/link';
 import { prisma } from '@wls/database';
+import { can } from '@wls/shared';
+import { ArrowRight, Clapperboard, Library, Plus } from 'lucide-react';
+import { ProjectCard } from '@/components/project-card';
 export const dynamic = 'force-dynamic';
 export default async function VisualProjectsPage() {
-  const {churchId}=await requireActor();
-  const projects = await prisma.visualProject.findMany({ where:{churchId}, orderBy: { updatedAt: 'desc' }, take: 100, select: { id: true, name: true, revision: true } });
-  return <div className="space-y-6"><div className="flex items-center justify-between gap-4 flex-wrap"><h1 className="text-3xl font-bold">Projetos visuais</h1><div className="flex gap-3"><Link className="btn-secondary" href="/songs">Usar música salva</Link><Link className="btn" href="/visual-projects/new">Criar vídeo com letra</Link></div></div>
-    <div className="grid md:grid-cols-2 gap-4">{projects.map(project => <Link className="card hover:border-accent" key={project.id} href={`/visual-projects/${project.id}`}><h2 className="font-bold">{project.name}</h2><p className="text-sm text-slate-400 mt-2">Revisão {project.revision}</p></Link>)}</div>
-    {!projects.length && <p className="card text-slate-400">Envie a letra completa ou escolha uma música salva para criar seu primeiro vídeo.</p>}
+  const t = await getTranslator();
+  const { churchId, role } = await requireActor();
+  const canEdit = can(role, 'edit');
+  const projects = await prisma.visualProject.findMany({ where: { churchId }, orderBy: { updatedAt: 'desc' }, take: 100, select: { id: true, name: true, document: true, revision: true, updatedAt: true } });
+  return <div><header className="studio-page-title"><div><span className="studio-eyebrow">{t("DA LETRA À TELA")}</span><h1>{t("Projetos visuais")}</h1><p>{t("Suas ideias, seus visuais e os próximos vídeos da igreja.")}</p></div><div className="studio-page-actions"><Link className="btn-secondary" href="/songs"><Library size={14} />{t(" Usar música salva")}</Link>{canEdit && <Link className="btn" href="/visual-projects/new"><Plus size={15} />{t(" Criar vídeo com letra")}</Link>}</div></header>
+    {projects.length > 0 && <div className="studio-section-head"><p>{projects.length} {projects.length === 1 ? t('projeto') : t('projetos')}{t(" · Mais recentes primeiro")}</p></div>}
+    {projects.length ? <div className="studio-project-grid">{projects.map(project => <ProjectCard project={project} key={project.id} />)}</div> : <div className="studio-empty"><Clapperboard size={30} /><h2>{t("A primeira ideia merece ganhar vida")}</h2><p>{t("Envie a letra completa ou escolha uma música da biblioteca para começar um projeto visual.")}</p>{canEdit && <Link className="btn" href="/visual-projects/new">{t("Criar primeiro vídeo ")}<ArrowRight size={14} /></Link>}</div>}
   </div>;
 }
