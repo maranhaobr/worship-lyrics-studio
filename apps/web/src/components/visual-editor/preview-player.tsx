@@ -1,4 +1,5 @@
 'use client';
+import { useTranslation } from '@/components/preferences-provider';
 import { useEffect, useMemo, useRef } from 'react';
 import { Player, type PlayerRef } from '@remotion/player';
 import { LyricComposition } from '@wls/video';
@@ -14,6 +15,7 @@ function PreviewComposition(props: CompositionProps) {
 export function PreviewPlayer({ document, assets, onFrame, playerRef }: {
   document: VisualProjectDocument; assets: MediaView[]; onFrame: (frame: number) => void; playerRef: React.RefObject<PlayerRef | null>;
 }) {
+  const t = useTranslation();
   const callback = useRef(onFrame); callback.current = onFrame;
   const media = useMemo(() => Object.fromEntries(assets.map(asset => [asset.id, { src: `/api/media/${asset.id}/content`, durationMs: asset.durationMs }])), [assets]);
   const props = useMemo(() => ({ document, media }), [document, media]);
@@ -28,6 +30,6 @@ export function PreviewPlayer({ document, assets, onFrame, playerRef }: {
   return <div className="overflow-hidden rounded-xl border border-slate-700 bg-black">
     <Player ref={playerRef} component={PreviewComposition} inputProps={props} durationInFrames={durationInFrames(document)}
       fps={document.fps} compositionWidth={document.width} compositionHeight={document.height} controls showVolumeControls={Boolean(document.referenceAudio)} style={{ width: '100%', aspectRatio: `${document.width} / ${document.height}` }}
-      errorFallback={({ error }) => <div role="alert" className="p-6 text-red-200">Não foi possível carregar o preview: {error.message}</div>} />
+      errorFallback={({ error }) => <div role="alert" className="p-6 text-red-200">{t("Não foi possível carregar o preview: ")}{error.message}</div>} />
   </div>;
 }

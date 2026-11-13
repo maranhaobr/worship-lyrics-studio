@@ -1,4 +1,5 @@
 'use client';
+import { useTranslation } from '@/components/preferences-provider';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
@@ -14,6 +15,7 @@ const appearance = {
 };
 
 function ToastItem({ toast, dismiss }: { toast: Toast; dismiss: (id: number) => void }) {
+  const t = useTranslation();
   const [paused, setPaused] = useState(false);
   const { Icon, label, color, duration } = appearance[toast.kind];
   useEffect(() => {
@@ -23,12 +25,13 @@ function ToastItem({ toast, dismiss }: { toast: Toast; dismiss: (id: number) => 
   }, [toast.id, duration, paused, dismiss]);
   return <div data-toast-kind={toast.kind} className={`pointer-events-auto flex items-start gap-3 rounded-xl border p-4 shadow-2xl ${color}`} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}>
     <Icon size={21} className="shrink-0 mt-0.5" aria-hidden="true" />
-    <div className="flex-1 min-w-0" role={toast.kind === 'error' ? 'alert' : 'status'} aria-atomic="true"><p className="font-semibold text-sm">{label}</p><p className="text-sm break-words mt-1">{toast.message}</p></div>
-    <button aria-label={`Fechar notificação: ${toast.message}`} className="shrink-0 rounded p-1 hover:bg-white/10 focus-visible:outline focus-visible:outline-2" onClick={() => dismiss(toast.id)}><X size={16} /></button>
+    <div className="flex-1 min-w-0" role={toast.kind === 'error' ? "alert" : "status"} aria-atomic="true"><p className="font-semibold text-sm">{t(label)}</p><p className="text-sm break-words mt-1">{t(toast.message)}</p></div>
+    <button aria-label={`${t('Fechar notificação')}: ${t(toast.message)}`} className="shrink-0 rounded p-1 hover:bg-white/10 focus-visible:outline focus-visible:outline-2" onClick={() => dismiss(toast.id)}><X size={16} /></button>
   </div>;
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const t = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const sequence = useRef(0);
   const dismiss = useCallback((id: number) => setToasts(items => items.filter(item => item.id !== id)), []);
@@ -37,7 +40,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const id = ++sequence.current;
     setToasts(items => [...items.filter(item => item.message !== message || item.kind !== kind), { id, message, kind }].slice(-4));
   }, []);
-  return <ToastContext.Provider value={notify}>{children}<section aria-label="Notificações" className="fixed z-[100] top-4 right-4 left-4 sm:left-auto sm:w-96 pointer-events-none flex flex-col gap-3 max-h-[calc(100dvh-32px)] overflow-y-auto">{toasts.map(toast => <ToastItem key={toast.id} toast={toast} dismiss={dismiss} />)}</section></ToastContext.Provider>;
+  return <ToastContext.Provider value={notify}>{children}<section aria-label={t("Notificações")} className="fixed z-[100] top-4 right-4 left-4 sm:left-auto sm:w-96 pointer-events-none flex flex-col gap-3 max-h-[calc(100dvh-32px)] overflow-y-auto">{toasts.map(toast => <ToastItem key={toast.id} toast={toast} dismiss={dismiss} />)}</section></ToastContext.Provider>;
 }
 
 export function useToast() {

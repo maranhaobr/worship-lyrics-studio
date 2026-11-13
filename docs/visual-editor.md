@@ -1,5 +1,15 @@
 # Editor Visual 2.0
 
+## Tema e idioma da interface
+
+Os seletores de tema claro/escuro e Português/English/Español ficam no cabeçalho da landing e no menu lateral do Studio. No celular, ficam no cabeçalho da área interna. As escolhas são compartilhadas entre as áreas e salvas em cookies de preferência por um ano neste navegador. O servidor aplica as preferências já na resposta inicial, evitando a troca de tema após carregar a página.
+
+A linguagem da interface não traduz nem modifica letras, nomes de projetos, músicas ou templates criados pelo usuário. No editor, a troca acontece sem recarregar os componentes de edição e preserva alterações ainda não salvas. As listas renderizadas no servidor são atualizadas ao selecionar outro idioma. O atributo `lang` do documento acompanha a escolha.
+
+O catálogo de interface fica em `apps/web/src/lib/i18n/messages.json`, com traduções explícitas para inglês e espanhol; português é a origem. Dados desconhecidos não passam por tradução automática. Tema de interface e tema visual do vídeo são independentes: fundos, cores das letras e exportação não mudam ao trocar claro/escuro.
+
+Verificação: `npx tsx --env-file=.env tests/preferences-browser.ts` (com o servidor e PostgreSQL locais disponíveis).
+
 ## Resolução de saída
 
 Em **Exportar e arquivo → Resolução do vídeo**, escolha projetor XGA 4:3, HD, Full HD (padrão), QHD, 4K UHD, vertical 9:16, quadrado ou retrato 4:5. Em **Personalizado**, informe largura e altura e clique em **Aplicar resolução**. O preview e o MP4 usam as mesmas dimensões; salve o projeto para mantê-las. Desfazer/refazer também inclui mudanças de resolução.

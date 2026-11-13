@@ -1,9 +1,11 @@
 'use client';
+import { useTranslation } from '@/components/preferences-provider';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { resizeClip, type LyricClip, type VisualProjectDocument } from '@wls/shared';
 import type { PlaybackClock } from '@/hooks/use-editor-playback';
 
 export function Timeline({ document, clock, selectedId, onSelect, onSeek, onChange }: { document: VisualProjectDocument; clock: PlaybackClock; selectedId: string | null; onSelect: (id: string) => void; onSeek: (ms: number) => void; onChange: (document: VisualProjectDocument) => boolean }) {
+  const t = useTranslation();
   const [zoom, setZoom] = useState(60);
   const [draft, setDraft] = useState<LyricClip | null>(null);
   const drag = useRef<{ clip: LyricClip; x: number; mode: 'move' | 'start' | 'end'; min: number; max: number; draft: LyricClip } | null>(null);
@@ -34,12 +36,12 @@ export function Timeline({ document, clock, selectedId, onSelect, onSeek, onChan
     }
     drag.current = null; setDraft(null);
   }
-  return <section className="card studio-timeline space-y-3 min-w-0"><div className="flex items-center justify-between gap-4 flex-wrap"><h2 className="font-bold">Timeline</h2>
-    <label className="flex items-center gap-2 text-sm">Zoom<input className="!w-32" type="range" min={20} max={180} step={10} value={zoom} onChange={event => setZoom(Number(event.target.value))} /></label></div>
+  return <section className="card studio-timeline space-y-3 min-w-0"><div className="flex items-center justify-between gap-4 flex-wrap"><h2 className="font-bold">{t("Timeline")}</h2>
+    <label className="flex items-center gap-2 text-sm">{"Zoom"}<input className="!w-32" type="range" min={20} max={180} step={10} value={zoom} onChange={event => setZoom(Number(event.target.value))} /></label></div>
     <PlaybackControls clock={clock} durationMs={document.durationMs} onSeek={onSeek} />
     <div className="overflow-x-auto pb-3"><div className="relative h-36" style={{ width }}>
       <div className="relative h-9 border-b border-slate-600" onClick={event => onSeek((event.clientX - event.currentTarget.getBoundingClientRect().left) / width * document.durationMs)}>
-        {Array.from({ length: Math.ceil(document.durationMs / step) }, (_, index) => <span key={index} className="absolute text-xs text-slate-400 border-l border-slate-700 pl-1 h-full" style={{ left: index * step / document.durationMs * width }}>{index * step / 1000}s</span>)}
+        {Array.from({ length: Math.ceil(document.durationMs / step) }, (_, index) => <span key={index} className="absolute text-xs text-slate-400 border-l border-slate-700 pl-1 h-full" style={{ left: index * step / document.durationMs * width }}>{index * step / 1000}{"s"}</span>)}
       </div>
       <div className="relative h-20 bg-slate-950/40 mt-2">
         {document.clips.map((original, index) => { const clip = draft?.id === original.id ? draft : original; return <div key={clip.id} role="button" aria-pressed={selectedId === clip.id} tabIndex={0} aria-label={`${clip.text}, ${(clip.startMs / 1000).toFixed(1)} a ${(clip.endMs / 1000).toFixed(1)} segundos`}
@@ -54,13 +56,14 @@ export function Timeline({ document, clock, selectedId, onSelect, onSeek, onChan
       </div>
       <Playhead clock={clock} durationMs={document.durationMs} width={width} />
     </div></div>
-    <p className="text-xs text-slate-400">Arraste os blocos para mover e as bordas para ajustar. Selecione um bloco para editar seus tempos com precisão.</p>
+    <p className="text-xs text-slate-400">{t("Arraste os blocos para mover e as bordas para ajustar. Selecione um bloco para editar seus tempos com precisão.")}</p>
   </section>;
 }
 
 function PlaybackControls({ clock, durationMs, onSeek }: { clock: PlaybackClock; durationMs: number; onSeek: (ms: number) => void }) {
+  const t = useTranslation();
   const timeMs = useSyncExternalStore(clock.subscribe, clock.getTimeMs, () => 0);
-  return <label><span className="label">Posição de reprodução · {(timeMs / 1000).toFixed(2)} s</span><input type="range" min={0} max={durationMs - 1} step={1} value={Math.min(timeMs, durationMs - 1)} onChange={event => onSeek(Number(event.target.value))} /></label>;
+  return <label><span className="label">{t("Posição de reprodução · ")}{(timeMs / 1000).toFixed(2)}{" s"}</span><input type="range" min={0} max={durationMs - 1} step={1} value={Math.min(timeMs, durationMs - 1)} onChange={event => onSeek(Number(event.target.value))} /></label>;
 }
 
 function Playhead({ clock, durationMs, width }: { clock: PlaybackClock; durationMs: number; width: number }) {
