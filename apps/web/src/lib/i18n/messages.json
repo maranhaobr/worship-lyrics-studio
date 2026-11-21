@@ -1,4 +1,36 @@
 {
+  "Excluir projeto": {
+    "en": "Delete project",
+    "es": "Eliminar proyecto"
+  },
+  "Excluir projeto visual?": {
+    "en": "Delete visual project?",
+    "es": "¿Eliminar proyecto visual?"
+  },
+  "Excluir definitivamente": {
+    "en": "Delete permanently",
+    "es": "Eliminar definitivamente"
+  },
+  "Excluindo...": {
+    "en": "Deleting...",
+    "es": "Eliminando..."
+  },
+  "Projeto visual excluído": {
+    "en": "Visual project deleted",
+    "es": "Proyecto visual eliminado"
+  },
+  "Não foi possível excluir o projeto": {
+    "en": "Could not delete the project",
+    "es": "No se pudo eliminar el proyecto"
+  },
+  "O projeto foi alterado. Atualize a lista antes de excluir.": {
+    "en": "The project has changed. Refresh the list before deleting.",
+    "es": "El proyecto ha cambiado. Actualiza la lista antes de eliminarlo."
+  },
+  "Esta ação é permanente. O projeto e seu histórico de alinhamento serão excluídos. A música original e os arquivos de mídia continuarão na biblioteca.": {
+    "en": "This action is permanent. The project and its alignment history will be deleted. The original song and media files will remain in the library.",
+    "es": "Esta acción es permanente. Se eliminarán el proyecto y su historial de alineación. La canción original y los archivos multimedia permanecerán en la biblioteca."
+  },
   "Preferências de exibição": {
     "en": "Display preferences",
     "es": "Preferencias de visualización"
@@ -1950,5 +1982,617 @@
   "para": {
     "en": "for",
     "es": "para"
+  },
+  "Planos": {
+    "en": "Plans",
+    "es": "Planes"
+  },
+  "Planos e assinatura": {
+    "en": "Plans and subscription",
+    "es": "Planes y suscripción"
+  },
+  "MONETIZAÇÃO POR IGREJA": {
+    "en": "CHURCH-BASED BILLING",
+    "es": "MONETIZACIÓN POR IGLESIA"
+  },
+  "Proposta comercial e preparação da integração Asaas.": {
+    "en": "Commercial proposal and Asaas integration preparation.",
+    "es": "Propuesta comercial y preparación de la integración con Asaas."
+  },
+  "Em planejamento": {
+    "en": "Planning stage",
+    "es": "En planificación"
+  },
+  "Nenhuma cobrança está ativa": {
+    "en": "No billing is active",
+    "es": "No hay cobros activos"
+  },
+  "Os valores e as franquias abaixo são uma proposta para revisão. Esta tela não contrata planos nem limita o acesso atual.": {
+    "en": "Prices and allowances below are a proposal for review. This screen does not subscribe to plans or limit current access.",
+    "es": "Los precios y las cuotas son una propuesta para revisar. Esta pantalla no contrata planes ni limita el acceso actual."
+  },
+  "Uso atual da igreja": {
+    "en": "Current church usage",
+    "es": "Uso actual de la iglesia"
+  },
+  "pessoas": {
+    "en": "people",
+    "es": "personas"
+  },
+  "de mídia": {
+    "en": "of media",
+    "es": "de archivos multimedia"
+  },
+  "Uma assinatura. Toda a sua igreja.": {
+    "en": "One subscription. Your whole church.",
+    "es": "Una suscripción. Toda tu iglesia."
+  },
+  "Teste proposto de 14 dias, sem cartão. Preços em reais.": {
+    "en": "Proposed 14-day trial, no card required. Prices in Brazilian reais.",
+    "es": "Prueba propuesta de 14 días, sin tarjeta. Precios en reales brasileños."
+  },
+  "Periodicidade": {
+    "en": "Billing cycle",
+    "es": "Periodicidad"
+  },
+  "Mensal": {
+    "en": "Monthly",
+    "es": "Mensual"
+  },
+  "Anual · pague 10 meses": {
+    "en": "Annual · pay for 10 months",
+    "es": "Anual · paga 10 meses"
+  },
+  "Essencial": {
+    "en": "Essential",
+    "es": "Esencial"
+  },
+  "Avançado": {
+    "en": "Advanced",
+    "es": "Avanzado"
+  },
+  "Sugestão principal": {
+    "en": "Suggested choice",
+    "es": "Opción sugerida"
+  },
+  "mês": {
+    "en": "month",
+    "es": "mes"
+  },
+  "ano": {
+    "en": "year",
+    "es": "año"
+  },
+  "Equivalente a": {
+    "en": "Equivalent to",
+    "es": "Equivalente a"
+  },
+  "Pagamento anual único.": {
+    "en": "One annual payment.",
+    "es": "Un único pago anual."
+  },
+  "Renovação mensal proposta.": {
+    "en": "Proposed monthly renewal.",
+    "es": "Renovación mensual propuesta."
+  },
+  "pessoas na equipe": {
+    "en": "team members",
+    "es": "personas en el equipo"
+  },
+  "projetos ativos": {
+    "en": "active projects",
+    "es": "proyectos activos"
+  },
+  "créditos de exportação por mês": {
+    "en": "export credits per month",
+    "es": "créditos de exportación al mes"
+  },
+  "minutos de sincronização por mês": {
+    "en": "sync minutes per month",
+    "es": "minutos de sincronización al mes"
+  },
+  "de armazenamento": {
+    "en": "of storage",
+    "es": "de almacenamiento"
+  },
+  "Exportação até 4K": {
+    "en": "Export up to 4K",
+    "es": "Exportación hasta 4K"
+  },
+  "Exportação até Full HD": {
+    "en": "Export up to Full HD",
+    "es": "Exportación hasta Full HD"
+  },
+  "Templates, editor e ProPresenter": {
+    "en": "Templates, editor and ProPresenter",
+    "es": "Plantillas, editor y ProPresenter"
+  },
+  "Simular este plano": {
+    "en": "Simulate this plan",
+    "es": "Simular este plan"
+  },
+  "Como funcionam os créditos": {
+    "en": "How credits work",
+    "es": "Cómo funcionan los créditos"
+  },
+  "Editar e assistir ao preview não consome créditos. Uma nova geração de vídeo consome créditos conforme duração e resolução.": {
+    "en": "Editing and previewing do not use credits. A new video render uses credits based on duration and resolution.",
+    "es": "Editar y ver la vista previa no consume créditos. Una nueva generación consume créditos según la duración y resolución."
+  },
+  "Duração do vídeo (min)": {
+    "en": "Video duration (min)",
+    "es": "Duración del video (min)"
+  },
+  "Resolução": {
+    "en": "Resolution",
+    "es": "Resolución"
+  },
+  "créditos por geração": {
+    "en": "credits per render",
+    "es": "créditos por generación"
+  },
+  "Um vídeo de 5 minutos em Full HD usa 5 créditos; em 4K, usa 20. Uma falha técnica deve devolver a reserva.": {
+    "en": "A 5-minute Full HD video uses 5 credits; in 4K, it uses 20. Technical failures should release the reservation.",
+    "es": "Un video de 5 minutos en Full HD usa 5 créditos; en 4K, usa 20. Un fallo técnico debe devolver la reserva."
+  },
+  "As franquias são mensais mesmo no plano anual. Não acumulam e não há cobrança automática de excedente na proposta.": {
+    "en": "Allowances are monthly even on annual plans. They do not roll over and the proposal has no automatic overage charges.",
+    "es": "Las cuotas son mensuales incluso en el plan anual. No se acumulan y la propuesta no incluye cobros automáticos por excedentes."
+  },
+  "Preparação do Asaas": {
+    "en": "Asaas setup",
+    "es": "Preparación de Asaas"
+  },
+  "Ambiente": {
+    "en": "Environment",
+    "es": "Entorno"
+  },
+  "Variáveis presentes. A conexão e os pagamentos ainda precisam ser homologados.": {
+    "en": "Variables are present. Connection and payments still need validation.",
+    "es": "Las variables están presentes. La conexión y los pagos aún deben validarse."
+  },
+  "Configuração de ambiente pendente.": {
+    "en": "Environment setup pending.",
+    "es": "Configuración del entorno pendiente."
+  },
+  "Cartão recorrente, Pix e boleto serão oferecidos pela página hospedada do Asaas. Pix e boleto mensais exigem pagamento; Pix Automático é uma integração separada.": {
+    "en": "Recurring cards, Pix and bank slips will be offered through the Asaas hosted page. Monthly Pix and slips require payment; Automatic Pix is a separate integration.",
+    "es": "La tarjeta recurrente, Pix y boleto se ofrecerán en la página alojada de Asaas. Pix y boleto mensuales requieren pago; Pix Automático es una integración separada."
+  },
+  "Checkout disponível após homologação": {
+    "en": "Checkout available after validation",
+    "es": "Checkout disponible tras la validación"
+  },
+  "Somente o Responsável poderá contratar ou cancelar. Seus dados de cartão não passam pelo Studio.": {
+    "en": "Only the Owner will be able to subscribe or cancel. Your card details do not pass through the Studio.",
+    "es": "Solo el Responsable podrá contratar o cancelar. Los datos de tu tarjeta no pasan por el Studio."
+  },
+  "Simulador interno de viabilidade": {
+    "en": "Internal viability simulator",
+    "es": "Simulador interno de viabilidad"
+  },
+  "Premissas ilustrativas, não são tarifas do Asaas nem custos medidos. Ajuste com seus valores reais. Simulação mensal, sem desconto anual.": {
+    "en": "Illustrative assumptions, not Asaas rates or measured costs. Adjust with your actual values. Monthly simulation without annual discount.",
+    "es": "Son supuestos ilustrativos, no tarifas de Asaas ni costos medidos. Ajusta con tus valores reales. Simulación mensual sin descuento anual."
+  },
+  "Taxa de pagamento (%)": {
+    "en": "Payment fee (%)",
+    "es": "Comisión de pago (%)"
+  },
+  "Taxa fixa por cobrança (R$)": {
+    "en": "Fixed fee per payment (BRL)",
+    "es": "Comisión fija por cobro (BRL)"
+  },
+  "Tributos estimados (%)": {
+    "en": "Estimated taxes (%)",
+    "es": "Impuestos estimados (%)"
+  },
+  "Custo variável por igreja (R$)": {
+    "en": "Variable cost per church (BRL)",
+    "es": "Costo variable por iglesia (BRL)"
+  },
+  "Custo fixo mensal total (R$)": {
+    "en": "Total monthly fixed cost (BRL)",
+    "es": "Costo fijo mensual total (BRL)"
+  },
+  "Igrejas pagantes": {
+    "en": "Paying churches",
+    "es": "Iglesias de pago"
+  },
+  "Plano simulado": {
+    "en": "Simulated plan",
+    "es": "Plan simulado"
+  },
+  "Resultado após custos informados": {
+    "en": "Result after entered costs",
+    "es": "Resultado tras los costos indicados"
+  },
+  "A margem depende de utilização, taxas, infraestrutura, suporte e eventual licença do Remotion. Receita não é lucro.": {
+    "en": "Margin depends on usage, fees, infrastructure, support and any required Remotion license. Revenue is not profit.",
+    "es": "El margen depende del uso, comisiones, infraestructura, soporte y una eventual licencia de Remotion. Los ingresos no son ganancias."
+  },
+  "Política em revisão": {
+    "en": "Policy under review",
+    "es": "Política en revisión"
+  },
+  "Nenhum limite desta proposta está sendo aplicado.": {
+    "en": "No limit from this proposal is being enforced.",
+    "es": "No se aplica ningún límite de esta propuesta."
+  },
+  "Checkout de teste": {
+    "en": "Test checkout",
+    "es": "Checkout de prueba"
+  },
+  "Cobranças reais desativadas": {
+    "en": "Real charges disabled",
+    "es": "Cobros reales desactivados"
+  },
+  "Plano": {
+    "en": "Plan",
+    "es": "Plan"
+  },
+  "Situação": {
+    "en": "Status",
+    "es": "Estado"
+  },
+  "Nome do pagador de teste": {
+    "en": "Test payer name",
+    "es": "Nombre del pagador de prueba"
+  },
+  "CPF ou CNPJ de teste": {
+    "en": "Test CPF or CNPJ",
+    "es": "CPF o CNPJ de prueba"
+  },
+  "Forma de pagamento": {
+    "en": "Payment method",
+    "es": "Forma de pago"
+  },
+  "Cartão de crédito": {
+    "en": "Credit card",
+    "es": "Tarjeta de crédito"
+  },
+  "Boleto": {
+    "en": "Boleto",
+    "es": "Boleto"
+  },
+  "Criar assinatura de teste": {
+    "en": "Create test subscription",
+    "es": "Crear suscripción de prueba"
+  },
+  "Abrir pagamento de teste no Asaas": {
+    "en": "Open test payment in Asaas",
+    "es": "Abrir pago de prueba en Asaas"
+  },
+  "Atualizar situação": {
+    "en": "Refresh status",
+    "es": "Actualizar estado"
+  },
+  "Não foi possível consultar a assinatura": {
+    "en": "Could not retrieve the subscription",
+    "es": "No se pudo consultar la suscripción"
+  },
+  "Situação da assinatura atualizada": {
+    "en": "Subscription status refreshed",
+    "es": "Estado de suscripción actualizado"
+  },
+  "Cobrança de teste criada. Abra o pagamento no Asaas.": {
+    "en": "Test invoice created. Open payment in Asaas.",
+    "es": "Cobro de prueba creado. Abre el pago en Asaas."
+  },
+  "Os valores e as franquias são uma proposta. O checkout abaixo cria apenas assinaturas no Sandbox e não limita o acesso atual.": {
+    "en": "Prices and allowances are proposed. Checkout only creates Sandbox subscriptions and does not limit current access.",
+    "es": "Los precios y cupos son una propuesta. El checkout solo crea suscripciones en Sandbox y no limita el acceso actual."
+  },
+  "Somente Sandbox. Nenhum pagamento real será realizado. Os limites atuais permanecem iguais.": {
+    "en": "Sandbox only. No real payment will be made. Current limits remain the same.",
+    "es": "Solo Sandbox. No se realizará ningún pago real. Los límites actuales se mantienen."
+  },
+  "Cartão, Pix e boleto usam a página de pagamento do Asaas. Pix e boleto exigem pagamento a cada cobrança; não são débito automático.": {
+    "en": "Card, Pix and boleto use the Asaas payment page. Pix and boleto require payment for each invoice; they are not automatic debits.",
+    "es": "Tarjeta, Pix y boleto usan la página de pago de Asaas. Pix y boleto requieren pagar cada factura; no son débitos automáticos."
+  },
+  "Autorizo enviar o nome, CPF/CNPJ de teste e meu e-mail ao Sandbox do Asaas para criar esta assinatura recorrente de teste.": {
+    "en": "I authorize sending the test name, CPF/CNPJ and my email to Asaas Sandbox to create this recurring test subscription.",
+    "es": "Autorizo enviar el nombre, CPF/CNPJ de prueba y mi correo a Asaas Sandbox para crear esta suscripción recurrente de prueba."
+  },
+  "Localhost não recebe webhooks externos. Use Atualizar situação para consultar o Asaas enquanto a URL pública não estiver configurada.": {
+    "en": "Localhost cannot receive external webhooks. Use Refresh status to query Asaas until the public URL is configured.",
+    "es": "Localhost no recibe webhooks externos. Usa Actualizar estado para consultar Asaas hasta configurar la URL pública."
+  },
+  "Para encerrar a recorrência de teste, cancele a assinatura no painel Sandbox do Asaas e atualize a situação aqui.": {
+    "en": "To end test recurrence, cancel the subscription in Asaas Sandbox and refresh the status here.",
+    "es": "Para finalizar la recurrencia de prueba, cancela la suscripción en Asaas Sandbox y actualiza el estado aquí."
+  },
+  "Os dados do cartão são preenchidos apenas no Asaas. Pix e boleto exigem pagamento de cada cobrança.": {
+    "en": "Card details are entered only in Asaas. Pix and boleto require payment for each invoice.",
+    "es": "Los datos de tarjeta se introducen solo en Asaas. Pix y boleto requieren pagar cada factura."
+  },
+  "CREATING": {
+    "en": "Creating",
+    "es": "Creando"
+  },
+  "UNKNOWN": {
+    "en": "Awaiting reconciliation",
+    "es": "Pendiente de conciliación"
+  },
+  "PENDING": {
+    "en": "Awaiting payment",
+    "es": "Pendiente de pago"
+  },
+  "ACTIVE": {
+    "en": "Payment confirmed",
+    "es": "Pago confirmado"
+  },
+  "PAST_DUE": {
+    "en": "Overdue",
+    "es": "Vencido"
+  },
+  "REVERSED": {
+    "en": "Refund or dispute under review",
+    "es": "Reembolso o disputa en revisión"
+  },
+  "CANCELED": {
+    "en": "Canceled",
+    "es": "Cancelado"
+  },
+  "Preparando áudio e modelos": {
+    "en": "Preparing audio and models",
+    "es": "Preparando audio y modelos"
+  },
+  "Reconhecendo a gravação": {
+    "en": "Recognizing the recording",
+    "es": "Reconociendo la grabación"
+  },
+  "Sincronizando as frases": {
+    "en": "Synchronizing phrases",
+    "es": "Sincronizando las frases"
+  },
+  "Resultado disponível com trechos para revisar.": {
+    "en": "Result available with passages to review.",
+    "es": "Resultado disponible con fragmentos para revisar."
+  },
+  "slide(s) sem reconhecimento confiável. Os tempos desses slides são provisórios e precisam de ajuste manual.": {
+    "en": "slide(s) without reliable recognition. Their timings are provisional and require manual adjustment.",
+    "es": "diapositiva(s) sin reconocimiento fiable. Sus tiempos son provisionales y requieren ajuste manual."
+  },
+  "Confira todos os avisos antes de aplicar os tempos.": {
+    "en": "Check every warning before applying timings.",
+    "es": "Revisa todos los avisos antes de aplicar los tiempos."
+  },
+  "Pulso · ondas e batidas": {
+    "en": "Pulse · waves and beats",
+    "es": "Pulso · ondas y ritmo"
+  },
+  "Energia · faixas em movimento": {
+    "en": "Energy · moving ribbons",
+    "es": "Energía · franjas en movimiento"
+  },
+  "Neon · órbitas e ritmo": {
+    "en": "Neon · orbits and rhythm",
+    "es": "Neón · órbitas y ritmo"
+  },
+  "Pulso · Celebração": {
+    "en": "Pulse · Celebration",
+    "es": "Pulso · Celebración"
+  },
+  "Energia · Louvor vivo": {
+    "en": "Energy · Living praise",
+    "es": "Energía · Alabanza viva"
+  },
+  "Neon · Noite de louvor": {
+    "en": "Neon · Worship night",
+    "es": "Neón · Noche de alabanza"
+  },
+  "Ritmo (BPM)": {
+    "en": "Tempo (BPM)",
+    "es": "Ritmo (BPM)"
+  },
+  "Ajuste da batida (ms)": {
+    "en": "Beat offset (ms)",
+    "es": "Desfase del ritmo (ms)"
+  },
+  "BPM manual: ajuste ouvindo o preview. O efeito não detecta as batidas do áudio automaticamente. Um ajuste positivo atrasa a primeira batida.": {
+    "en": "Manual BPM: adjust while listening to the preview. The effect does not detect audio beats automatically. A positive offset delays the first beat.",
+    "es": "BPM manual: ajusta escuchando la vista previa. El efecto no detecta automáticamente el ritmo del audio. Un desfase positivo retrasa el primer pulso."
+  },
+  "Salvar automaticamente": {
+    "en": "Auto-save",
+    "es": "Guardar automáticamente"
+  },
+  "Salvando automaticamente...": {
+    "en": "Auto-saving...",
+    "es": "Guardando automáticamente..."
+  },
+  "Falha ao salvar": {
+    "en": "Save failed",
+    "es": "Error al guardar"
+  },
+  "Falha ao salvar. Tente Salvar projeto novamente; as alterações continuam pendentes.": {
+    "en": "Save failed. Try Save project again; your changes are still pending.",
+    "es": "Error al guardar. Intenta Guardar proyecto de nuevo; tus cambios siguen pendientes."
+  },
+  "Salvar alterações antes de sair?": {
+    "en": "Save changes before leaving?",
+    "es": "¿Guardar cambios antes de salir?"
+  },
+  "Existem alterações que ainda não foram salvas. Você pode salvar o projeto, sair sem salvar ou continuar editando.": {
+    "en": "Some changes have not been saved. You can save the project, leave without saving, or keep editing.",
+    "es": "Hay cambios sin guardar. Puedes guardar el proyecto, salir sin guardar o seguir editando."
+  },
+  "Continuar editando": {
+    "en": "Keep editing",
+    "es": "Seguir editando"
+  },
+  "Sair sem salvar": {
+    "en": "Leave without saving",
+    "es": "Salir sin guardar"
+  },
+  "Salvar e sair": {
+    "en": "Save and leave",
+    "es": "Guardar y salir"
+  },
+  "Não foi possível salvar. Confira os campos e a conexão, ou resolva o conflito antes de sair. Suas alterações continuam neste editor.": {
+    "en": "Could not save. Check the fields and connection, or resolve the conflict before leaving. Your changes remain in this editor.",
+    "es": "No se pudo guardar. Revisa los campos y la conexión o resuelve el conflicto antes de salir. Tus cambios permanecen en este editor."
+  },
+  "Selecionar vários": {
+    "en": "Select multiple",
+    "es": "Seleccionar varios"
+  },
+  "Selecionar todos": {
+    "en": "Select all",
+    "es": "Seleccionar todos"
+  },
+  "Limpar seleção": {
+    "en": "Clear selection",
+    "es": "Limpiar selección"
+  },
+  "Selecionar bloco": {
+    "en": "Select block",
+    "es": "Seleccionar bloque"
+  },
+  "bloco(s) selecionado(s)": {
+    "en": "selected block(s)",
+    "es": "bloque(s) seleccionado(s)"
+  },
+  "Mover seleção 0,1 segundo para trás": {
+    "en": "Move selection back 0.1 seconds",
+    "es": "Mover selección 0,1 segundos hacia atrás"
+  },
+  "Mover seleção 0,1 segundo para frente": {
+    "en": "Move selection forward 0.1 seconds",
+    "es": "Mover selección 0,1 segundos hacia delante"
+  },
+  "Ctrl/Cmd + clique seleciona blocos; Shift + clique seleciona um intervalo. Arraste um bloco selecionado para mover o grupo. As bordas ajustam apenas um bloco. Setas movem 0,1s; Shift + seta move 1s.": {
+    "en": "Ctrl/Cmd + click selects blocks; Shift + click selects a range. Drag a selected block to move the group. Edges resize one block only. Arrow keys move 0.1s; Shift + arrow moves 1s.",
+    "es": "Ctrl/Cmd + clic selecciona bloques; Shift + clic selecciona un rango. Arrastra un bloque seleccionado para mover el grupo. Los bordes ajustan solo un bloque. Las flechas mueven 0,1s; Shift + flecha mueve 1s."
+  },
+  "Palavras em destaque": {
+    "en": "Highlighted words",
+    "es": "Palabras destacadas"
+  },
+  "Ativar destaque de palavras": {
+    "en": "Enable word emphasis",
+    "es": "Activar palabras destacadas"
+  },
+  "Palavras separadas por vírgula": {
+    "en": "Comma-separated words",
+    "es": "Palabras separadas por comas"
+  },
+  "Use até 30 palavras, com até 40 caracteres cada.": {
+    "en": "Use up to 30 words, with up to 40 characters each.",
+    "es": "Usa hasta 30 palabras, con hasta 40 caracteres cada una."
+  },
+  "Fonte do destaque": {
+    "en": "Emphasis font",
+    "es": "Fuente del destacado"
+  },
+  "Cor do destaque": {
+    "en": "Emphasis color",
+    "es": "Color del destacado"
+  },
+  "Tamanho relativo": {
+    "en": "Relative size",
+    "es": "Tamaño relativo"
+  },
+  "Posição do destaque": {
+    "en": "Emphasis placement",
+    "es": "Posición del destacado"
+  },
+  "Na frase": {
+    "en": "Within the phrase",
+    "es": "En la frase"
+  },
+  "Em linha própria": {
+    "en": "On its own line",
+    "es": "En su propia línea"
+  },
+  "Animação do destaque": {
+    "en": "Emphasis animation",
+    "es": "Animación del destacado"
+  },
+  "Pulso na entrada da palavra": {
+    "en": "Pulse on word entry",
+    "es": "Pulso al entrar la palabra"
+  },
+  "Pulso no BPM": {
+    "en": "Pulse to BPM",
+    "es": "Pulso al BPM"
+  },
+  "O pulso no BPM usa o tempo manual em Tema; não detecta as batidas do áudio automaticamente.": {
+    "en": "BPM pulse uses the manual tempo in Theme; it does not automatically detect audio beats.",
+    "es": "El pulso usa el tempo manual de Tema; no detecta automáticamente los ritmos del audio."
+  },
+  "Destaque · Nome acima de tudo": {
+    "en": "Emphasis · Name above all",
+    "es": "Destacado · Nombre sobre todo"
+  },
+  "Copiar blocos": {
+    "en": "Copy blocks",
+    "es": "Copiar bloques"
+  },
+  "Colar blocos": {
+    "en": "Paste blocks",
+    "es": "Pegar bloques"
+  },
+  "Blocos copiados": {
+    "en": "Blocks copied",
+    "es": "Bloques copiados"
+  },
+  "Blocos colados": {
+    "en": "Blocks pasted",
+    "es": "Bloques pegados"
+  },
+  "Nenhum bloco para colar": {
+    "en": "No blocks to paste",
+    "es": "No hay bloques para pegar"
+  },
+  "A colagem excede o limite de duração ou de blocos do projeto": {
+    "en": "Pasting exceeds the project duration or block limit",
+    "es": "El pegado supera el límite de duración o de bloques del proyecto"
+  },
+  "ID de bloco duplicado": {
+    "en": "Duplicate block ID",
+    "es": "ID de bloque duplicado"
+  },
+  "Não foi possível colar os blocos": {
+    "en": "Could not paste the blocks",
+    "es": "No se pudieron pegar los bloques"
+  },
+  "Ctrl/Cmd+C copia a seleção; Ctrl/Cmd+V cola no cursor. Dentro de um bloco, cola depois dele. Blocos seguintes avançam se faltar espaço. Confira a sincronização com o áudio após colar.": {
+    "en": "Ctrl/Cmd+C copies the selection; Ctrl/Cmd+V pastes at the playhead. Inside a block, it pastes after it. Following blocks move forward if needed. Check audio synchronization after pasting.",
+    "es": "Ctrl/Cmd+C copia la selección; Ctrl/Cmd+V pega en el cursor. Dentro de un bloque, pega después. Los siguientes bloques avanzan si falta espacio. Revisa la sincronización con el audio después de pegar."
+  },
+  "Alta definição · 4:3": {
+    "en": "High definition · 4:3",
+    "es": "Alta definición · 4:3"
+  },
+  "Exportação de alta qualidade: quadros sem perda e compressão H.264 de alta qualidade. O arquivo pode ser maior e a geração pode levar mais tempo.": {
+    "en": "High-quality export: lossless frames and high-quality H.264 compression. Files may be larger and rendering may take longer.",
+    "es": "Exportación de alta calidad: fotogramas sin pérdida y compresión H.264 de alta calidad. El archivo puede ser mayor y la generación puede tardar más."
+  },
+  "Resolução baixa: ampliar este MP4 pode deixar as letras pixeladas. Para 4:3, escolha 1440 × 1080 em Resolução do vídeo; para 16:9, use 1920 × 1080. A resolução física do telão também limita a nitidez.": {
+    "en": "Low resolution: enlarging this MP4 may pixelate the lyrics. For 4:3, choose 1440 × 1080 in Video resolution; for 16:9, use 1920 × 1080. The physical screen resolution also limits sharpness.",
+    "es": "Resolución baja: ampliar este MP4 puede pixelar las letras. Para 4:3, elige 1440 × 1080 en Resolución del vídeo; para 16:9, usa 1920 × 1080. La resolución física de la pantalla también limita la nitidez."
+  },
+  "Copiar estilo": {
+    "en": "Copy style",
+    "es": "Copiar estilo"
+  },
+  "Colar estilo": {
+    "en": "Paste style",
+    "es": "Pegar estilo"
+  },
+  "Estilo do slide copiado": {
+    "en": "Slide style copied",
+    "es": "Estilo de diapositiva copiado"
+  },
+  "Estilo aplicado ao slide": {
+    "en": "Style applied to slide",
+    "es": "Estilo aplicado a la diapositiva"
+  },
+  "Copia fundo, fontes, cores, tema e animações do slide selecionado. Cole em outro slide sem alterar a letra nem os tempos, independentemente do escopo acima.": {
+    "en": "Copies the selected slide’s background, fonts, colors, theme and animations. Paste onto another slide without changing lyrics or timing, regardless of the scope above.",
+    "es": "Copia el fondo, las fuentes, los colores, el tema y las animaciones de la diapositiva seleccionada. Pega en otra sin cambiar la letra ni los tiempos, independientemente del alcance de arriba."
   }
 }

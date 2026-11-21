@@ -1,0 +1,39 @@
+'use client';
+import { useState } from 'react';
+import { BadgeCheck, Check, CreditCard, FlaskConical, Info, ShieldCheck } from 'lucide-react';
+import { billingPolicy, estimateContribution, estimateExportCredits, paidPlans, planPriceCents, type BillingCycle } from '@wls/shared';
+import { BillingCheckout } from './billing-checkout';
+import { usePreferences } from '@/components/preferences-provider';
+
+type Readiness = { environment: 'sandbox' | 'production'; configured: boolean; missing: string[]; chargingEnabled: boolean };
+const brl = (cents: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+export function BillingPlanner({ readiness, current }: { readiness: Readiness; current: { members: number; projects: number; storageBytes: number } }) {
+  const { t } = usePreferences();
+  const [cycle, setCycle] = useState<BillingCycle>('monthly');
+  const [selected, setSelected] = useState('pro');
+  const plan = paidPlans.find(item => item.id === selected)!;
+  const [duration, setDuration] = useState(5), [fourK, setFourK] = useState(false);
+  const [costs, setCosts] = useState({ processorPercent: 4, processorFixedCents: 50, taxPercent: 6, variableCostCents: 2500, monthlyFixedCostCents: 50000, activeChurches: 50 });
+  const estimate = estimateContribution({ ...costs, revenueCents: plan.monthlyCents });
+  const credits = estimateExportCredits(Math.round(duration * 60000), fourK ? 3840 : 1920, fourK ? 2160 : 1080);
+  return <div className="billing-planner"><header className="studio-page-title"><div><span className="studio-eyebrow">{t('MONETIZAÇÃO POR IGREJA')}</span><h1>{t('Planos e assinatura')}</h1><p>{t('Proposta comercial e preparação da integração Asaas.')}</p></div><span className="billing-draft"><FlaskConical size={14} />{t('Em planejamento')}</span></header>
+    <div className="card billing-notice"><Info size={20} /><div><strong>{t('Cobranças reais desativadas')}</strong><p>{t('Os valores e as franquias são uma proposta. O checkout abaixo cria apenas assinaturas no Sandbox e não limita o acesso atual.')}</p></div></div>
+    <div className="billing-overview"><span>{t('Uso atual da igreja')}</span><strong>{current.members} {t('pessoas')} · {current.projects} {t('projetos')} · {(current.storageBytes / 1024 ** 3).toFixed(2)} GB {t('de mídia')}</strong></div>
+    <div className="billing-heading"><div><h2>{t('Uma assinatura. Toda a sua igreja.')}</h2><p>{t('Teste proposto de 14 dias, sem cartão. Preços em reais.')}</p></div><div className="studio-editor-tabs" role="group" aria-label={t('Periodicidade')}><button aria-pressed={cycle === 'monthly'} onClick={() => setCycle('monthly')}>{t('Mensal')}</button><button aria-pressed={cycle === 'annual'} onClick={() => setCycle('annual')}>{t('Anual · pague 10 meses')}</button></div></div>
+    <div className="billing-plans">{paidPlans.map(item => <article key={item.id} className={`card billing-plan ${item.recommended ? 'billing-recommended' : ''}`}>
+      <div className="billing-plan-title"><h3>{t(item.name)}</h3>{item.recommended && <span><BadgeCheck size={12} />{t('Sugestão principal')}</span>}</div>
+      <div className="billing-price">{brl(planPriceCents(item, cycle))}<small>/{t(cycle === 'monthly' ? 'mês' : 'ano')}</small></div>
+      <p>{cycle === 'annual' ? `${t('Equivalente a')} ${brl(planPriceCents(item, cycle) / 12)}/${t('mês')}. ${t('Pagamento anual único.')}` : t('Renovação mensal proposta.')}</p>
+      <ul>{[`${item.limits.members} ${t('pessoas na equipe')}`, `${item.limits.projects} ${t('projetos ativos')}`, `${item.limits.exportCredits} ${t('créditos de exportação por mês')}`, `${item.limits.alignmentMinutes} ${t('minutos de sincronização por mês')}`, `${item.limits.storageBytes / 1024 ** 3} GB ${t('de armazenamento')}`, item.limits.maxPixels > 1920 * 1080 ? t('Exportação até 4K') : t('Exportação até Full HD'), t('Templates, editor e ProPresenter')].map(feature => <li key={feature}><Check size={14} />{feature}</li>)}</ul>
+      <button className={selected === item.id ? 'btn' : 'btn-secondary'} aria-pressed={selected === item.id} onClick={() => setSelected(item.id)}>{t('Simular este plano')}</button>
+    </article>)}</div>
+    <div className="billing-tools"><section className="card space-y-4"><h2><CreditCard size={17} />{t('Como funcionam os créditos')}</h2><p>{t('Editar e assistir ao preview não consome créditos. Uma nova geração de vídeo consome créditos conforme duração e resolução.')}</p><div className="billing-fields"><label><span className="label">{t('Duração do vídeo (min)')}</span><input type="number" min={1} max={60} value={duration} onChange={event => setDuration(Math.max(1, Math.min(60, Number(event.target.value) || 1)))} /></label><label><span className="label">{t('Resolução')}</span><select value={fourK ? '4k' : '1080p'} onChange={event => setFourK(event.target.value === '4k')}><option value="1080p">Full HD</option><option value="4k">4K</option></select></label></div><strong className="billing-result">{credits} {t('créditos por geração')}</strong><p>{t('Um vídeo de 5 minutos em Full HD usa 5 créditos; em 4K, usa 20. Uma falha técnica deve devolver a reserva.')}</p><p>{t('As franquias são mensais mesmo no plano anual. Não acumulam e não há cobrança automática de excedente na proposta.')}</p></section>
+      <section className="card space-y-4"><h2><ShieldCheck size={17} />{t('Preparação do Asaas')}</h2><p>{t('Ambiente')}: <strong>{readiness.environment}</strong></p><p>{readiness.configured ? t('Variáveis presentes. A conexão e os pagamentos ainda precisam ser homologados.') : t('Configuração de ambiente pendente.')}</p>{readiness.missing.length > 0 && <ul className="billing-missing">{readiness.missing.map(name => <li key={name}>{name}</li>)}</ul>}<p>{t('Cartão, Pix e boleto usam a página de pagamento do Asaas. Pix e boleto exigem pagamento a cada cobrança; não são débito automático.')}</p><p>{t('Somente o Responsável poderá contratar ou cancelar. Seus dados de cartão não passam pelo Studio.')}</p></section>
+    </div>
+    <BillingCheckout enabled={readiness.chargingEnabled} planId={selected} cycle={cycle} />
+    <details className="card billing-costs"><summary>{t('Simulador interno de viabilidade')}</summary><p>{t('Premissas ilustrativas, não são tarifas do Asaas nem custos medidos. Ajuste com seus valores reais. Simulação mensal, sem desconto anual.')}</p><div className="billing-cost-grid">{([
+      ['processorPercent', 'Taxa de pagamento (%)', 1], ['processorFixedCents', 'Taxa fixa por cobrança (R$)', 100], ['taxPercent', 'Tributos estimados (%)', 1], ['variableCostCents', 'Custo variável por igreja (R$)', 100], ['monthlyFixedCostCents', 'Custo fixo mensal total (R$)', 100], ['activeChurches', 'Igrejas pagantes', 1],
+    ] as const).map(([key, label, factor]) => <label key={key}><span className="label">{t(label)}</span><input type="number" min={key === 'activeChurches' ? 1 : 0} step={key === 'activeChurches' ? 1 : .01} value={costs[key] / factor} onChange={event => { const n = Number(event.target.value); const valid = Number.isFinite(n) ? Math.max(key === 'activeChurches' ? 1 : 0, n) : 0; setCosts(value => ({ ...value, [key]: key === 'activeChurches' ? Math.max(1, Math.round(valid)) : key.endsWith('Percent') ? Math.min(100, valid) : Math.round(valid * factor) })); }} /></label>)}</div><div className={`billing-margin ${estimate.contributionCents < 0 ? 'billing-negative' : ''}`}><strong>{t('Plano simulado')}: {t(plan.name)}</strong><span>{t('Resultado após custos informados')}: {brl(estimate.contributionCents)} · {estimate.marginPercent.toFixed(1)}%</span></div><p>{t('A margem depende de utilização, taxas, infraestrutura, suporte e eventual licença do Remotion. Receita não é lucro.')}</p></details>
+    <p className="billing-version">{t('Política em revisão')}: {billingPolicy.version}. {t('Nenhum limite desta proposta está sendo aplicado.')}</p>
+  </div>;
+}

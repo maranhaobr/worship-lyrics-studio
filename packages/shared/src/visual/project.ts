@@ -18,8 +18,14 @@ export const visualStyleSchema = z.object({
     widthPercent: z.number().min(20).max(100).optional(), offsetX: z.number().min(-35).max(35).optional(), offsetY: z.number().min(-35).max(35).optional(),
     strokeWidth: z.number().min(0).max(6).optional(), strokeColor: color.optional(), shadow: z.enum(['none', 'soft', 'strong', 'glow']).optional(),
     plate: z.enum(['none', 'dark', 'light']).optional(),
+    emphasis: z.object({
+      enabled: z.boolean(), words: z.array(z.string().trim().min(1).max(40).refine(word => !/\s/u.test(word))).max(30),
+      fontFamily: z.enum(fontFamilies), fontWeight: z.enum(['400', '600', '700', '900']), color,
+      sizeScale: z.number().min(.75).max(2.5), placement: z.enum(['inline', 'line']), uppercase: z.boolean(),
+      animation: z.enum(['none', 'pop', 'beat']),
+    }).optional(),
   }),
-  decoration: z.object({ theme: z.enum(['none', 'christmas', 'easter', 'paper', 'cinematic', 'bold']), accent: color, intensity: z.number().min(0).max(1), motion: z.boolean() }).optional(),
+  decoration: z.object({ theme: z.enum(['none', 'christmas', 'easter', 'paper', 'cinematic', 'bold', 'pulse', 'kinetic', 'neon']), accent: color, intensity: z.number().min(0).max(1), motion: z.boolean(), bpm: z.number().int().min(40).max(200).optional(), beatOffsetMs: z.number().int().min(-10000).max(10000).optional() }).optional(),
   animation: z.object({ type: z.enum(['fade', 'slide', 'zoom', 'words']), durationMs: z.number().int().min(100).max(3000), holdMs: z.number().int().min(0).max(3000).optional(), exitType: z.enum(['none', 'fade', 'slide', 'zoom']).optional(), exitDurationMs: z.number().int().min(100).max(3000).optional() }),
 });
 export const wordSchema = z.object({ text: z.string().trim().min(1).max(500), startMs: ms, endMs: ms });
@@ -54,6 +60,7 @@ export const projectUpdateSchema = z.object({ name: z.string().trim().min(1).max
 export const templateInputSchema = z.object({ name: z.string().trim().min(1).max(100), style: visualStyleSchema });
 export type VisualProjectDocument = z.infer<typeof visualProjectSchema>;
 export type VisualStyle = z.infer<typeof visualStyleSchema>;
+export const defaultWordEmphasis: NonNullable<VisualStyle['text']['emphasis']> = { enabled: true, words: ['Jesus', 'Deus', 'Santo'], fontFamily: 'Oswald', fontWeight: '700', color: '#ffdc62', sizeScale: 1.6, placement: 'inline', uppercase: true, animation: 'pop' };
 export type LyricClip = z.infer<typeof clipSchema>;
 export type TimedWord = z.infer<typeof wordSchema>;
 export type TemplatePreset = { id: string; name: string; style: VisualStyle };
@@ -64,6 +71,18 @@ export type MediaView = { id: string; name: string; kind: 'image' | 'video' | 'a
 
 export function resolveClipStyle(style: VisualStyle, clip?: LyricClip): VisualStyle {
   return { ...style, ...clip?.style };
+}
+
+export function copySlideStyle(document: VisualProjectDocument, id: string): VisualStyle | undefined {
+  const clip = document.clips.find(item => item.id === id);
+  if (!clip) return undefined;
+  const style = resolveClipStyle(document.style, clip);
+  return structuredClone({ ...style, decoration: style.decoration ?? { theme: 'none', accent: '#ffffff', intensity: 0, motion: false } });
+}
+
+export function applySlideStyle(document: VisualProjectDocument, id: string, style: VisualStyle): VisualProjectDocument {
+  if (!document.clips.some(clip => clip.id === id)) return document;
+  return { ...document, clips: document.clips.map(clip => clip.id === id ? { ...clip, style: structuredClone(style) } : clip) };
 }
 
 export function projectBackgrounds(document: VisualProjectDocument) {

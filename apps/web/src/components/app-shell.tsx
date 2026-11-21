@@ -4,7 +4,7 @@ import { PreferenceControls } from '@/components/preference-controls';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AudioLines, LayoutDashboard, Library, Users, PanelLeftClose, PanelLeftOpen, Clapperboard, ArrowUpRight, Building2, ChevronRight } from 'lucide-react';
+import { AudioLines, LayoutDashboard, Library, Users, PanelLeftClose, PanelLeftOpen, Clapperboard, ArrowUpRight, Building2, ChevronRight, WalletCards } from 'lucide-react';
 import { roleLabels, type MemberRole } from '@wls/shared';
 import { AccountMenu } from './account-menu';
 
@@ -13,6 +13,7 @@ const navigation = [
   { href: '/songs', label: 'Biblioteca', Icon: Library },
   { href: '/visual-projects', label: 'Projetos visuais', Icon: Clapperboard },
   { href: '/church', label: 'Igreja e equipe', Icon: Users },
+  { href: '/billing', label: 'Planos', Icon: WalletCards },
 ];
 export function AppShell({ children, account }: { children: React.ReactNode; account: { name: string; churchName: string; churchId: string; role: MemberRole; churches: { id: string; name: string }[] } }) {
   const t = useTranslation();
@@ -28,7 +29,7 @@ export function AppShell({ children, account }: { children: React.ReactNode; acc
         <button onClick={toggle} aria-expanded={!collapsed} aria-controls="main-navigation" aria-label={collapsed ? t("Expandir menu") : t("Recolher menu")} title={collapsed ? t("Expandir menu") : t("Recolher menu")} className="studio-collapse">{collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}</button><div className="studio-mobile-preferences"><PreferenceControls /></div><details className="studio-mobile-account"><summary aria-label={t("Abrir menu da conta")}><span className="studio-avatar">{account.name.trim().slice(0, 1).toLocaleUpperCase('pt-BR')}</span></summary><div><strong>{account.name}</strong><p>{account.churchName} · {t(roleLabels[account.role])}</p><AccountMenu current={account.churchId} churches={account.churches} /></div></details></div>
       <div className="studio-church" title={account.churchName}><span className="studio-church-icon"><Building2 size={18} /></span><div className="studio-sidebar-copy"><small>{t("ESPAÇO DA IGREJA")}</small><strong>{account.churchName}</strong></div></div>
       <span className="studio-nav-caption studio-sidebar-copy">{t("ESPAÇO DE TRABALHO")}</span>
-      <nav id="main-navigation" aria-label={t("Navegação principal")} className="studio-navigation">{navigation.map(({ href, label, Icon }) => <Link key={href} href={href} title={t(label)} aria-label={t(label)} aria-current={pathname.startsWith(href) ? "page" : undefined}><Icon size={19} /><span className="studio-sidebar-copy">{t(label)}</span>{pathname.startsWith(href) && <span className="studio-nav-indicator" />}</Link>)}</nav>
+      <nav id="main-navigation" aria-label={t("Navegação principal")} className="studio-navigation">{navigation.filter(item => item.href !== '/billing' || account.role === 'OWNER').map(({ href, label, Icon }) => <Link key={href} href={href} title={t(label)} aria-label={t(label)} aria-current={pathname.startsWith(href) ? "page" : undefined}><Icon size={19} /><span className="studio-sidebar-copy">{t(label)}</span>{pathname.startsWith(href) && <span className="studio-nav-indicator" />}</Link>)}</nav>
       <div className="studio-sidebar-preferences"><PreferenceControls /></div><div className="studio-sidebar-bottom"><Link className="studio-site-link" href="/" title={t("Conhecer o Worship Lyrics Studio")}><AudioLines size={17} /><span className="studio-sidebar-copy">{t("Feito para dar vida à mensagem")}</span><ArrowUpRight size={14} className="studio-sidebar-copy" /></Link>
         <div className="studio-profile"><span className="studio-avatar">{account.name.trim().slice(0, 1).toLocaleUpperCase('pt-BR')}</span><div className="studio-sidebar-copy"><strong>{account.name}</strong><small>{t(roleLabels[account.role])}</small></div></div>
         <AccountMenu compact={collapsed} current={account.churchId} churches={account.churches} />

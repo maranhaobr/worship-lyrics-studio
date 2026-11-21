@@ -48,3 +48,13 @@ export async function updateVisualProject(id: string, body: unknown) {
   }
   return { revision: data.revision + 1 };
 }
+
+export async function deleteVisualProject(id: string, revision: number) {
+  const { churchId } = await requireActor('delete');
+  const deleted = await prisma.visualProject.deleteMany({ where: { id, churchId, revision } });
+  if (!deleted.count) {
+    const exists = await prisma.visualProject.findFirst({ where: { id, churchId }, select: { id: true } });
+    throw new ApiError(exists ? 409 : 404, exists ? 'O projeto foi alterado. Atualize a lista antes de excluir.' : 'Projeto não encontrado');
+  }
+  // Alignment jobs cascade. Source songs and shared media must remain intact.
+}

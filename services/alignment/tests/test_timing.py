@@ -1,9 +1,56 @@
 import unittest
 import json
-from app.timing import normalize, search_windows, timed_clip
+from app.timing import normalize, match_words, search_windows, validate_search_windows, timed_clip, provisional_clip, valid_checkpoint
 
 
 class TimingTests(unittest.TestCase):
+    def test_refrains_are_matched_in_order_even_when_last_repeat_is_more_accurate(self):
+        clips = [{'id': str(i), 'text': 'Como não confiar em Ti'} for i in range(3)]
+        recognized = [{'word': word, 'start': 10 + verse * 10 + index * .5, 'end': 10.4 + verse * 10 + index * .5}
+                      for verse in range(3) for index, word in enumerate(['Como', 'não', 'confiarem' if verse < 2 else 'confiar', 'em', 'Ti'])]
+        matched = match_words([word for clip in clips for word in clip['text'].split()], recognized)
+        self.assertEqual(len(matched), 13)
+        self.assertEqual(matched[0]['start'], 10)
+        self.assertEqual(matched[10]['start'], 30)
+        windows = search_windows(clips, recognized, 40)
+        validate_search_windows(clips, windows)
+        for i, (low, high, _) in enumerate(windows):
+            self.assertLessEqual(low, 10 + i * 10)
+            self.assertGreaterEqual(high, 12.4 + i * 10)
+
+    def test_word_matching_keeps_exact_spelling_order_and_skips_empty_tokens(self):
+        recognized = [{'word': word, 'start': i, 'end': i + .5} for i, word in enumerate(['d', 'i', 'e', 't'])]
+        self.assertEqual(len(match_words(['t', 'i', 'd', 'e'], recognized)), 2)
+        self.assertEqual(match_words(['!!!'], [{'word': '...', 'start': 0, 'end': 1}]), {})
+        self.assertEqual(match_words([], recognized), {})
+
+    def test_unmatched_verse_is_rejected_before_forced_alignment(self):
+        clips = [{'text': 'Santo'} for _ in range(5)]
+        with self.assertRaisesRegex(ValueError, 'slides 2 a 4'):
+            validate_search_windows(clips, [(1, 2, False), (2, 3, True), (3, 4, True), (4, 5, True), (5, 6, False)])
+        validate_search_windows(clips[:3], [(1, 2, False), (2, 3, True), (3, 4, False)])
+        with self.assertRaisesRegex(ValueError, 'slide 1'):
+            validate_search_windows([{'text': 'Uma frase inteira aqui'}], [(1, 1.2, True)])
+
+    def test_provisional_positions_are_bounded_and_never_claim_measured_words(self):
+        clip = {'id': 'a', 'text': 'Na escuridão'}
+        result = provisional_clip(clip, 10, 12)
+        self.assertTrue(result['needsReview'])
+        self.assertEqual(result['timingSource'], 'estimated')
+        self.assertEqual(result['endMs'], 12000)
+        with self.assertRaises(ValueError):
+            provisional_clip(clip, 10, 40)
+        with self.assertRaises(ValueError):
+            provisional_clip(clip, 10, 10.001)
+
+    def test_invalid_checkpoints_do_not_override_fresh_results(self):
+        clip = {'id': 'a', 'text': 'Santo'}
+        value = {**timed_clip(clip, [{'word': 'Santo', 'start': 1., 'end': 2.}], 0, 3), 'timingSource': 'aligned'}
+        self.assertTrue(valid_checkpoint(value, clip, 0, 3))
+        self.assertFalse(valid_checkpoint({**value, 'startMs': 'bad'}, clip, 0, 3))
+        self.assertFalse(valid_checkpoint({**value, 'words': [{}]}, clip, 0, 3))
+        self.assertFalse(valid_checkpoint(value, clip, 4, 5))
+
     def test_numpy_model_scores_produce_json_safe_booleans(self):
         try:
             import numpy as np

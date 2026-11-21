@@ -5,3 +5,5 @@ export * from './presets';
 export * from './lyrics-import';
 export * from './section-heading';
 export * from './alignment';
+export * from './emphasis';
+export * from './export-quality';

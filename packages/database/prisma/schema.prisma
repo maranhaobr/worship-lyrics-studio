@@ -171,6 +171,47 @@ model Church {
   projects VisualProject[]
   templates VisualTemplate[]
   media MediaAsset[]
+  billingSubscriptions ChurchSubscription[]
+}
+
+model ChurchSubscription {
+  id String @id @default(cuid())
+  churchId String
+  church Church @relation(fields: [churchId], references: [id], onDelete: Restrict)
+  environment String
+  planId String
+  cycle String
+  priceCents Int
+  policyVersion String
+  billingType String
+  status String @default("CREATING")
+  customerId String?
+  providerId String? @unique
+  invoiceUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  invoices BillingInvoice[]
+  @@unique([churchId, environment])
+}
+
+model BillingInvoice {
+  id String @id
+  subscriptionId String
+  subscription ChurchSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  status String
+  dueDate String
+  priceCents Int
+  invoiceUrl String?
+  updatedAt DateTime @updatedAt
+  @@index([subscriptionId, dueDate])
+}
+
+model BillingEvent {
+  id String @id
+  environment String
+  eventType String
+  resourceId String
+  processedAt DateTime @default(now())
 }
 
 model Membership {

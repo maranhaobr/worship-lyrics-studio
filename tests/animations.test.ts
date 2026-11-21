@@ -2,6 +2,49 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { animationStyle, exitAnimationStyle } from '../packages/video/src/animations';
 import { displayClipAt, projectFromSong } from '../packages/shared/src';
+import { rhythmState } from '../packages/video/src/rhythm';
+import { visualStyleSchema, templatePresets } from '../packages/shared/src';
+import { defaultWordEmphasis, isEmphasizedWord } from '../packages/shared/src';
+import { wordEmphasisStyle } from '../packages/video/src/word-emphasis';
+
+test('keyword emphasis matches whole words without changing lyrics', () => {
+  for (const word of ['JESUS', 'Jesus!', '(Deus)', 'sánto']) assert.ok(isEmphasizedWord(word, defaultWordEmphasis.words));
+  for (const word of ['deuses', 'santos', 'JesusCristo', '']) assert.equal(isEmphasizedWord(word, defaultWordEmphasis.words), false);
+  assert.equal(isEmphasizedWord('Jesus', []), false);
+  const legacy = structuredClone(templatePresets.find(preset => preset.id === 'builtin-bold')!.style);
+  assert.ok(visualStyleSchema.safeParse(legacy).success);
+  legacy.text.emphasis = { ...defaultWordEmphasis, sizeScale: 9 };
+  assert.equal(visualStyleSchema.safeParse(legacy).success, false);
+});
+test('keyword animation is deterministic and settles after entry', () => {
+  const style = (ms: number) => wordEmphasisStyle(defaultWordEmphasis, ms, 20, 30, undefined);
+  assert.equal(style(-1).transform, 'scale(1)');
+  assert.equal(style(1000).transform, 'scale(1)');
+  assert.notEqual(style(160).transform, 'scale(1)');
+  assert.deepEqual(style(160), style(160));
+  assert.equal(wordEmphasisStyle({ ...defaultWordEmphasis, placement: 'line', animation: 'none' }, 160, 1, 30, undefined).display, 'block');
+});
+
+test('rhythmic scenes use a deterministic global beat clock with tempo, phase and freeze controls', () => {
+  const first = rhythmState(8, 30, 120, 0);
+  rhythmState(1000, 30, 120, 0);
+  assert.deepEqual(rhythmState(8, 30, 120, 0), first);
+  assert.equal(rhythmState(15, 30, 120).phase, 0);
+  assert.equal(rhythmState(15, 30, 60).phase, .5);
+  assert.equal(rhythmState(15, 30, 120, 500).phase, 0);
+  assert.deepEqual(rhythmState(999, 30, 200, -500, false), rhythmState(0, 30, 40, 1000, false));
+  for (let frame = 0; frame < 100; frame++) {
+    const value = rhythmState(frame, 30, 128, 1000);
+    assert.ok(value.phase >= 0 && value.phase < 1 && value.pulse >= 0 && value.pulse <= 1);
+  }
+});
+test('rhythmic presets validate and legacy themes keep optional tempo compatibility', () => {
+  for (const preset of templatePresets) assert.ok(visualStyleSchema.safeParse(preset.style).success, preset.id);
+  for (const theme of ['pulse', 'kinetic', 'neon']) assert.ok(templatePresets.some(preset => preset.style.decoration?.theme === theme));
+  const style = structuredClone(templatePresets.find(preset => preset.id === 'builtin-bold')!.style);
+  assert.ok(visualStyleSchema.safeParse(style).success);
+  for (const bpm of [0, 39, 201, 120.5]) assert.equal(visualStyleSchema.safeParse({ ...style, decoration: { ...style.decoration, bpm } }).success, false);
+});
 test('animations can be sought deterministically and clamp at either end', () => {
   for (const type of ['fade', 'slide', 'zoom', 'words'] as const) {
     assert.equal(animationStyle(-100, 600, type).opacity, 0);

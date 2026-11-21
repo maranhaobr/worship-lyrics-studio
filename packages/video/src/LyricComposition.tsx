@@ -9,6 +9,6 @@ export function LyricComposition(props: CompositionProps) {
   const time = frameToMs(useCurrentFrame(), props.document.fps);
   const clip = displayClipAt(props.document, time)?.clip;
   const style = resolveClipStyle(props.document.style, clip);
-  const background = <BackgroundLayer {...props} style={style} />;
+  const background = <BackgroundLayer {...props} style={style} frameOffset={clip?.style?.background ? msToFrame(clip.startMs, props.document.fps) : 0} />;
   return <AbsoluteFill>{clip?.style?.background ? <Sequence key={clip.id} from={msToFrame(clip.startMs, props.document.fps)}>{background}</Sequence> : background}<LyricLayer document={props.document} /></AbsoluteFill>;
 }

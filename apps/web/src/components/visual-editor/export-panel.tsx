@@ -41,6 +41,8 @@ export function ExportPanel({ projectId, document, autoExport }: { projectId: st
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return <section className="card space-y-3"><h2 className="font-bold">{t("Seu lyric video")}</h2>
+    <p className="text-sm text-slate-400">{t('Exportação de alta qualidade: quadros sem perda e compressão H.264 de alta qualidade. O arquivo pode ser maior e a geração pode levar mais tempo.')}</p>
+    {Math.min(document.width, document.height) < 720 && <p role="status" className="text-sm text-amber-200">{t('Resolução baixa: ampliar este MP4 pode deixar as letras pixeladas. Para 4:3, escolha 1440 × 1080 em Resolução do vídeo; para 16:9, use 1920 × 1080. A resolução física do telão também limita a nitidez.')}</p>}
     <p className="text-sm text-slate-400">{t("Gere o vídeo completo em MP4, ")}{document.width}{t(" × ")}{document.height}{t(" px e sem áudio, com todos os slides e suas personalizações.")}</p>
     <button className="btn" disabled={busy || !canEdit} onClick={generate}>{busy ? t("Gerando vídeo completo...") : ready ? t("Gerar nova versão") : t("Gerar MP4 completo")}</button>
     {busy && <p role="status" className="text-sm text-slate-400">{t("Isso pode levar alguns minutos. Mantenha esta página aberta; você pode continuar editando.")}</p>}

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const resolutionPresets = [
+  { id: 'projector-hq', label: 'Alta definição · 4:3', width: 1440, height: 1080 },
   { id: 'projector', label: 'Projetor XGA · 4:3', width: 1024, height: 768 },
   { id: 'hd', label: 'HD · 16:9', width: 1280, height: 720 },
   { id: 'full-hd', label: 'Full HD · 16:9', width: 1920, height: 1080 },

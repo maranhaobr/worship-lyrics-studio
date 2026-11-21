@@ -2,7 +2,7 @@ import { AbsoluteFill, Img, Loop, OffthreadVideo, staticFile } from 'remotion';
 import type { CompositionProps, VisualStyle } from '@wls/shared';
 import { ThemeDecorations } from './ThemeDecorations';
 
-export function BackgroundLayer({ document, media, style = document.style }: CompositionProps & { style?: VisualStyle }) {
+export function BackgroundLayer({ document, media, style = document.style, frameOffset = 0 }: CompositionProps & { style?: VisualStyle; frameOffset?: number }) {
   const background = style.background;
   const asset = background.type === 'gradient' ? undefined : media[background.assetId];
   const src = asset?.src.startsWith('static:') ? staticFile(asset.src.slice(7)) : asset?.src;
@@ -13,7 +13,7 @@ export function BackgroundLayer({ document, media, style = document.style }: Com
           <OffthreadVideo src={src} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </Loop>
     ) : null}
-    <ThemeDecorations decoration={style.decoration} />
+    <ThemeDecorations decoration={style.decoration} frameOffset={frameOffset} />
     <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${style.overlay})` }} />
   </AbsoluteFill>;
 }

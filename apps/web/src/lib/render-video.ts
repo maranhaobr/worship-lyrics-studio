@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, selectComposition } from '@remotion/renderer';
 import { prisma } from '@wls/database';
-import { projectBackgrounds, type CompositionProps, type VisualProjectDocument } from '@wls/shared';
+import { lyricVideoEncoding, projectBackgrounds, type CompositionProps, type VisualProjectDocument } from '@wls/shared';
 import { ApiError } from './api-errors';
 import { workspaceRoot } from './server-paths';
 import { readMedia } from './storage/local';
@@ -36,7 +36,7 @@ export async function renderProjectVideo(document: VisualProjectDocument) {
     const inputProps: CompositionProps = { document, media };
     const composition = await selectComposition({ serveUrl, id: 'WorshipLyrics', inputProps });
     const path = resolve(directory, 'video.mp4');
-    await renderMedia({ composition, serveUrl, inputProps, outputLocation: path, codec: 'h264', pixelFormat: 'yuv420p', muted: true, concurrency: 2 });
+    await renderMedia({ composition, serveUrl, inputProps, outputLocation: path, ...lyricVideoEncoding, concurrency: 2 });
     return { path, dispose };
   } catch (error) { await dispose(); throw error; }
   finally { state.busy = false; }

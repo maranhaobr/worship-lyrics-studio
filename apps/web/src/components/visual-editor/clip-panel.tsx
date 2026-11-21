@@ -1,23 +1,45 @@
 'use client';
 import { useTranslation } from '@/components/preferences-provider';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { distributeWords, getSectionHeading, resizeClip, type LyricClip } from '@wls/shared';
 
-export function ClipPanel({ clip, onSave, onRepeat, onDelete, onError }: { clip: LyricClip; onSave: (clip: LyricClip) => boolean; onRepeat: () => void; onDelete: () => void; onError: (message: string) => void }) {
+export type ClipDraft = { dirty: boolean; commit: () => boolean };
+export function ClipPanel({ clip, onSave, onRepeat, onDelete, onError, onDraft }: { clip: LyricClip; onSave: (clip: LyricClip) => boolean; onRepeat: () => void; onDelete: () => void; onError: (message: string) => void; onDraft: (draft: ClipDraft | null) => void }) {
   const t = useTranslation();
   const [text, setText] = useState(clip.text);
   const [section, setSection] = useState(clip.section);
   const [start, setStart] = useState(String(clip.startMs / 1000));
   const [end, setEnd] = useState(String(clip.endMs / 1000));
   const [words, setWords] = useState(clip.words);
-  function save(event: React.FormEvent) {
-    event.preventDefault();
+  const previous = useRef(clip);
+  useEffect(() => {
+    const before = previous.current;
+    // Merge external visual/timeline changes without destroying text being typed.
+    setText(value => value === before.text ? clip.text : value);
+    setSection(value => value === before.section ? clip.section : value);
+    setStart(value => value === String(before.startMs / 1000) ? String(clip.startMs / 1000) : value);
+    setEnd(value => value === String(before.endMs / 1000) ? String(clip.endMs / 1000) : value);
+    setWords(value => JSON.stringify(value) === JSON.stringify(before.words) ? clip.words : value);
+    previous.current = clip;
+  }, [clip]);
+  function commit() {
     const startMs = Math.round(Number(start) * 1000), endMs = Math.round(Number(end) * 1000);
-    if (!text.trim() || !start || !end || !Number.isFinite(startMs) || endMs <= startMs) { onError('Preencha uma letra e um intervalo válido'); return; }
+    if (!text.trim() || !start || !end || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) { onError('Preencha uma letra e um intervalo válido'); return false; }
     const normalized = text.trim();
     const next = resizeClip({ ...clip, words }, startMs, endMs);
-    onSave({ ...next, text: normalized, section, words: normalized !== clip.text ? distributeWords(normalized, endMs - startMs) : next.words });
+    const updated = { ...next, text: normalized, section, words: normalized !== clip.text ? distributeWords(normalized, endMs - startMs) : next.words };
+    const accepted = onSave(updated);
+    if (accepted) { setText(updated.text); setStart(String(updated.startMs / 1000)); setEnd(String(updated.endMs / 1000)); setWords(updated.words); }
+    return accepted;
   }
+  useEffect(() => {
+    const dirty = text !== clip.text || section !== clip.section || start !== String(clip.startMs / 1000) || end !== String(clip.endMs / 1000) || JSON.stringify(words) !== JSON.stringify(clip.words);
+    onDraft({ dirty, commit });
+    // Publish only when form values change; callbacks read the current render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, section, start, end, words, clip, onDraft]);
+  useEffect(() => () => onDraft(null), [onDraft]);
+  function save(event: React.FormEvent) { event.preventDefault(); commit(); }
   return <section className="card space-y-4"><h2 className="font-bold">{t("Bloco selecionado")}</h2>{getSectionHeading(clip.text) && <p className="text-sm text-slate-400">{t("Este bloco é um marcador de seção e não aparece como letra no vídeo. Seu intervalo e fundo são preservados; você pode removê-lo da timeline se desejar.")}</p>}<form className="space-y-3" onSubmit={save}>
     <label><span className="label">{t("Seção")}</span><input value={section} maxLength={100} onChange={event => setSection(event.target.value)} /></label>
     <label><span className="label">{t("Letra")}</span><textarea value={text} maxLength={500} rows={3} required onChange={event => setText(event.target.value)} /></label>

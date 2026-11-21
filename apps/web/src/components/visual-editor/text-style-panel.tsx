@@ -1,6 +1,7 @@
 'use client';
 import { useTranslation } from '@/components/preferences-provider';
 import { fontFamilies, type VisualStyle } from '@wls/shared';
+import { WordEmphasisPanel } from './word-emphasis-panel';
 export function TextStylePanel({ style, onChange }: { style: VisualStyle; onChange: (style: VisualStyle) => void }) {
   const t = useTranslation();
   const text = style.text;
@@ -25,5 +26,6 @@ export function TextStylePanel({ style, onChange }: { style: VisualStyle; onChan
     <label><span className="label">{t("Sombra e brilho")}</span><select value={text.shadow ?? "soft"} onChange={event => update({ shadow: event.target.value as typeof text.shadow })}><option value="none">{t("Sem sombra")}</option><option value="soft">{t("Sombra suave")}</option><option value="strong">{t("Sombra forte")}</option><option value="glow">{t("Brilho")}</option></select></label>
     <label><span className="label">{t("Faixa atrás do texto")}</span><select value={text.plate ?? "none"} onChange={event => update({ plate: event.target.value as typeof text.plate })}><option value="none">{t("Sem faixa")}</option><option value="dark">{t("Escura")}</option><option value="light">{t("Clara")}</option></select></label>
     <p className="text-xs text-slate-400">{t("Oswald, Montserrat, Playfair Display e Dancing Script acompanham o vídeo. Confira frases longas e deslocamentos no preview para evitar cortes.")}</p>
+    <WordEmphasisPanel value={text.emphasis} onChange={emphasis => update({ emphasis })} />
   </section>;
 }

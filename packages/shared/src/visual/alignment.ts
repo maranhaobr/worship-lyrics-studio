@@ -5,9 +5,14 @@ import { visualProjectSchema, wordSchema, type VisualProjectDocument } from './p
 export const alignedClipSchema = z.object({
   clipId: z.string().min(1), startMs: z.number().int().nonnegative(), endMs: z.number().int().positive(),
   words: z.array(wordSchema).min(1), needsReview: z.boolean(),
+  timingSource: z.enum(['aligned', 'transcript', 'estimated']).optional(),
+}).superRefine((clip, ctx) => {
+  if (clip.timingSource && clip.timingSource !== 'aligned' && !clip.needsReview) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Tempos alternativos exigem revisão' });
 });
 export const alignmentResultSchema = z.object({
   durationMs: z.number().int().positive().max(3_600_000), clips: z.array(alignedClipSchema).min(1), warnings: z.array(z.string()).max(10_000),
+}).superRefine((result, ctx) => {
+  if (result.clips.some(clip => clip.timingSource === 'estimated') && !result.warnings.length) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Tempos provisórios precisam de aviso explícito' });
 });
 export type AlignmentResult = z.infer<typeof alignmentResultSchema>;
 export const alignmentJobSchema = z.object({

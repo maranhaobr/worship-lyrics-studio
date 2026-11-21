@@ -1,6 +1,8 @@
 """Pure timing helpers: estimated positions are search windows, never final timings."""
 import difflib
 import unicodedata
+import math
+from array import array
 
 
 def normalize(word):
@@ -8,8 +10,35 @@ def normalize(word):
 
 
 def match_words(expected, recognized):
-    matcher = difflib.SequenceMatcher(a=[normalize(w) for w in expected], b=[normalize(w['word']) for w in recognized], autojunk=False)
-    return {block.a + i: recognized[block.b + i] for block in matcher.get_matching_blocks() for i in range(block.size)}
+    left = [normalize(word) for word in expected]
+    right = [normalize(word['word']) for word in recognized]
+    if not left or not right:
+        return {}
+    # Long contiguous-block heuristics can skip entire refrains when one repeat
+    # is transcribed more accurately than another. Maximize monotonic matches
+    # globally, preserving the original ASR timestamps and exact word identity.
+    # Bound the table to ~16 MB; exceptionally large inputs retain the previous
+    # matcher rather than allocating unbounded memory inside the worker.
+    width = len(right) + 1
+    if (len(left) + 1) * width > 4_000_000:
+        matcher = difflib.SequenceMatcher(a=left, b=right, autojunk=False)
+        return {block.a + i: recognized[block.b + i] for block in matcher.get_matching_blocks() for i in range(block.size) if left[block.a + i]}
+    rows = array('I', [0]) * ((len(left) + 1) * width)
+    for i in range(len(left) - 1, -1, -1):
+        row, following = i * width, (i + 1) * width
+        for j in range(len(right) - 1, -1, -1):
+            rows[row + j] = rows[following + j + 1] + 1 if left[i] and left[i] == right[j] else max(rows[following + j], rows[row + j + 1])
+    result, i, j = {}, 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] and left[i] == right[j]:
+            result[i] = recognized[j]
+            i += 1
+            j += 1
+        elif rows[(i + 1) * width + j] >= rows[i * width + j + 1]:
+            i += 1
+        else:
+            j += 1
+    return result
 
 
 def search_windows(clips, recognized, duration):
@@ -86,3 +115,43 @@ def timed_clip(clip, recognized, low, high, uncertain=False):
     if any(word['endMs'] <= word['startMs'] for word in words):
         raise ValueError('Tempos muito curtos para alinhar as palavras com segurança.')
     return {'clipId': clip['id'], 'startMs': start_ms, 'endMs': end_ms, 'words': words, 'needsReview': bool(uncertain)}
+
+
+def validate_search_windows(clips, windows):
+    """Reject an unmatched verse before spending minutes forcing every slide."""
+    begin = None
+    for i, (low, high, uncertain) in enumerate(windows):
+        if uncertain:
+            if begin is None:
+                begin = i
+            if i - begin >= 2:
+                raise ValueError(f'Os slides {begin + 1} a {i + 1} não encontraram correspondência na gravação. Confira trechos repetidos e a versão da música. A transcrição foi preservada para a próxima tentativa.')
+        else:
+            begin = None
+        if high - low < max(.1, len(clips[i]['text'].split()) * .08):
+            raise ValueError(f'O slide {i + 1} ficou sem espaço suficiente na gravação. Confira trechos repetidos e a ordem da letra. A transcrição foi preservada para a próxima tentativa.')
+
+
+def provisional_clip(clip, low, high):
+    """Explicit manual-review placeholder, never claimed as measured word timing."""
+    words = clip['text'].split()
+    start, end = round(low * 1000), round(high * 1000)
+    if not words or not math.isfinite(low) or not math.isfinite(high) or not 0 < high - low <= 12 or end - start < len(words) * 10:
+        raise ValueError('Trecho sem evidência suficiente para sugerir uma posição segura.')
+    return {'clipId': clip['id'], 'startMs': start, 'endMs': end,
+            'words': [{'text': text, 'startMs': round((end - start) * i / len(words)), 'endMs': round((end - start) * (i + 1) / len(words))} for i, text in enumerate(words)],
+            'needsReview': True, 'timingSource': 'estimated'}
+
+
+def valid_checkpoint(value, clip, low, high):
+    if not isinstance(value, dict) or value.get('timingSource') != 'aligned' or type(value.get('needsReview')) is not bool:
+        return False
+    start, end, words = value.get('startMs'), value.get('endMs'), value.get('words')
+    if type(start) is not int or type(end) is not int or not low * 1000 - 1 <= start < end <= high * 1000 + 1 or not isinstance(words, list) or len(words) != len(clip['text'].split()):
+        return False
+    previous = 0
+    for expected, word in zip(clip['text'].split(), words):
+        if not isinstance(word, dict) or word.get('text') != expected or type(word.get('startMs')) is not int or type(word.get('endMs')) is not int or not previous <= word['startMs'] < word['endMs'] <= end - start:
+            return False
+        previous = word['endMs']
+    return bool(words) and words[0]['startMs'] == 0

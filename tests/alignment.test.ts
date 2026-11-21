@@ -1,12 +1,23 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { alignmentInputMatches, applyAlignment, distributeWords, projectFromLyrics, lyricsImportSchema, type AlignmentResult } from '../packages/shared/src';
+import { alignmentInputMatches, alignmentResultSchema, applyAlignment, distributeWords, projectFromLyrics, lyricsImportSchema, type AlignmentResult } from '../packages/shared/src';
 
 const create = () => { let id = 0; return projectFromLyrics(lyricsImportSchema.parse({ title: 'Teste', lyrics: 'Santo para sempre\nGlória a Ti' }), () => String(++id)); };
 const result: AlignmentResult = { durationMs: 20000, warnings: [], clips: [
   { clipId: '1', startMs: 2000, endMs: 5000, words: distributeWords('Santo para sempre', 3000), needsReview: false },
   { clipId: '2', startMs: 12000, endMs: 15000, words: distributeWords('Glória a Ti', 3000), needsReview: false },
 ] };
+
+test('provisional timings require explicit review and warnings while legacy results still parse', () => {
+  assert.ok(alignmentResultSchema.safeParse(result).success);
+  const provisional = structuredClone(result);
+  provisional.clips[0].timingSource = 'estimated';
+  assert.equal(alignmentResultSchema.safeParse(provisional).success, false);
+  provisional.clips[0].needsReview = true;
+  assert.equal(alignmentResultSchema.safeParse(provisional).success, false);
+  provisional.warnings.push('Slide 1: posição provisória; ajuste manualmente.');
+  assert.ok(alignmentResultSchema.safeParse(provisional).success);
+});
 test('alignment changes timing while preserving IDs, text, section, audio and visual overrides', () => {
   const document = create(); document.referenceAudio = { assetId: 'audio' };
   document.clips[0].style = { background: { type: 'video', assetId: 'video' } };

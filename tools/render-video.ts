@@ -4,6 +4,7 @@ import { bundle } from '@remotion/bundler';
 import { renderMedia, selectComposition } from '@remotion/renderer';
 import { z } from 'zod';
 import { projectBackgrounds, visualProjectSchema } from '../packages/shared/src/visual/project';
+import { lyricVideoEncoding } from '../packages/shared/src/visual/export-quality';
 
 async function main() {
   const [, , input, output = 'out/worship.mp4'] = process.argv;
@@ -15,7 +16,7 @@ async function main() {
   const serveUrl = await bundle({ entryPoint: resolve('packages/video/src/remotion/index.ts') });
   const composition = await selectComposition({ serveUrl, id: 'WorshipLyrics', inputProps });
   await mkdir(dirname(resolve(output)), { recursive: true });
-  await renderMedia({ composition, serveUrl, inputProps, outputLocation: resolve(output), codec: 'h264', pixelFormat: 'yuv420p', muted: true, overwrite: false, concurrency: 2 });
+  await renderMedia({ composition, serveUrl, inputProps, outputLocation: resolve(output), ...lyricVideoEncoding, overwrite: false, concurrency: 2 });
   console.log(`MP4 sem áudio salvo em ${resolve(output)}`);
 }
 main().catch(error => { console.error(error instanceof Error ? error.message : 'Erro ao renderizar'); process.exitCode = 1; });
